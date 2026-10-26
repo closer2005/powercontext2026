@@ -588,6 +588,8 @@ async def open_builtin_runtime(
         topic_memory_processing_available = _topic_memory_processing_available(config, processing_bindings)
         runtime = await resources.enter_async_context(
             BuiltinRuntime(
+                lifecycle_database=contexts.database,
+                lifecycle_sources=contexts.repositories.sources,
                 code_service=await resources.enter_async_context(open_code_service(config.code, config.database)),
                 provider=contexts,
                 capabilities=RuntimeCapabilities(

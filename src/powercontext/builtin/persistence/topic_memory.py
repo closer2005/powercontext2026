@@ -379,6 +379,7 @@ class TopicMemoryRepository:
             .where(
                 TOPIC_MEMORY_ACTIVE_TOPICS_TABLE.c.scope_id == scope_id,
                 TOPIC_MEMORY_ACTIVE_TOPICS_TABLE.c.family == TopicMemory.family,
+                ARTIFACT_HEADS_TABLE.c.lifecycle_state == "active",
             )
         )
         if tag_filter is not None:
@@ -487,6 +488,29 @@ class TopicMemoryRepository:
             admission=admission,
         )
         channels = await self.index.search(connection, scope_id, request)
+        # Immutable projections remain available for audit while governance
+        # controls whether the current body may enter generation and search.
+        visible = select(ARTIFACT_HEADS_TABLE.c.artifact_id, ARTIFACT_HEADS_TABLE.c.revision).where(
+            ARTIFACT_HEADS_TABLE.c.scope_id == scope_id,
+            ARTIFACT_HEADS_TABLE.c.family == TopicMemory.family,
+            ARTIFACT_HEADS_TABLE.c.lifecycle_state == "active",
+            ARTIFACT_HEADS_TABLE.c.artifact_id.in_({
+                hit.artifact_ref.artifact_id
+                for hits in (channels.topic_fts, channels.detail_fts, channels.topic_vector, channels.detail_vector)
+                for hit in hits
+            }),
+        )
+        allowed = set((await connection.execute(visible)).tuples())
+        channels = channels.model_copy(
+            update={
+                name: tuple(
+                    hit
+                    for hit in getattr(channels, name)
+                    if (hit.artifact_ref.artifact_id, hit.artifact_ref.revision) in allowed
+                )
+                for name in ("topic_fts", "detail_fts", "topic_vector", "detail_vector")
+            }
+        )
         await self._check_retrieval_shape(connection)
         outcome = _fuse_topic_memory_rankings(query, channels, limit, mode=used_mode, admission=admission)
         return TopicMemorySearchResult(
