@@ -150,6 +150,7 @@ _NOISE = frozenset([
     "from",
     "with",
     "what",
+    "who",
     "which",
     "how",
     "does",
@@ -220,6 +221,12 @@ _NOISE = frozenset([
     "important",
     "ongoing",
     "materially",
+    "s",
+    "primary",
+    "roughly",
+    "than",
+    "more",
+    "each",
 ])
 
 # Short queries deliberately fit the public Memory API's lexical admission floor.
@@ -248,13 +255,19 @@ _ASPECTS = (
     ),
     (
         r"\b(geograph\w*|countr\w*|region\w*|primarily\s+operat\w*)\b",
-        ("geographic segments", "international operations", "countries divisions"),
+        (
+            "geographic segments",
+            "international operations",
+            "countries divisions",
+            "north america europe asia africa",
+            "latin america middle east pacific",
+        ),
         r"(?m)^\s*(?:item\s+\d+[.:]?\s*)?(?:geograph\w*|business\b|our\s+(?:divisions|business))",
     ),
     (
         r"\b(legal|litigation|lawsuit\w*|battles?|contingen\w*)\b",
-        ("legal proceedings", "litigation contingencies"),
-        r"(?m)^\s*(?:(?:item|note)\s+\d+[.:]?\s*)?(?:legal\s+proceedings|litigation|contingencies)\b",
+        ("legal proceedings", "litigation contingencies", "lawsuits claims"),
+        r"(?m)^\s*(?:(?:item|note)\s+\d+[.:]?\s*)?(?:legal\s+proceedings|litigation|(?:commitments\s+and\s+)?contingencies)\b",
     ),
     (
         r"\b(restructur\w*|impairment\w*)\b",
@@ -271,6 +284,16 @@ _ASPECTS = (
         ("shares repurchased", "dividends stock"),
         r"(?m)^\s*(?:dividends|repurchases|stockholders|shareholders)\b",
     ),
+    (
+        r"\b(segment\w*|categor\w*|customers?|products?|services?|divisions?)\b",
+        ("business segments", "products services", "principal customers"),
+        r"(?m)^\s*(?:(?:summary\s+of\s+)?business\s+segments?|segments?\s+(?:data|information)|our\s+(?:customers|business))\b",
+    ),
+    (
+        r"\b(cyclic\w*|season\w*)\b",
+        ("cyclical demand", "seasonal business"),
+        r"(?m)^\s*(?:cyclic\w*|season\w*|business|risk\s+factors)\b",
+    ),
 )
 
 
@@ -279,13 +302,28 @@ def _tokens(text: str) -> list[str]:
     # Light inflection normalization affects ranking, while Memory receives the
     # original words and explicit vocabulary alternatives above.
     return [
-        term[:-3] + "y"
+        "cyclic"
+        if term.startswith("cyclic")
+        else term[:-3] + "y"
         if len(term) > 5 and term.endswith("ies")
         else term[:-1]
         if len(term) > 4 and term.endswith("s") and not term.endswith(("ss", "us", "is"))
         else term
         for term in terms
     ]
+
+
+def _query_weights(
+    raw_terms: tuple[str, ...],
+    label_terms: set[str],
+    aspects: tuple[tuple[str, tuple[str, ...], str], ...],
+) -> dict[str, float]:
+    weights = {term: 1.0 for term in _tokens(" ".join(raw_terms)) if not term.isdigit() and term not in label_terms}
+    for _, alternatives, _ in aspects:
+        for term in _tokens(" ".join(alternatives)):
+            if term not in _NOISE and term not in label_terms:
+                weights.setdefault(term, 0.4)
+    return weights
 
 
 def _rank_pdf_candidates(
@@ -299,21 +337,28 @@ def _rank_pdf_candidates(
     """Rank retrieved pages with document alignment and requested-aspect coverage."""
     labels = {key: text.partition("\n")[0].lower() for key, (_, text) in candidates.items()}
     bodies = {key: text.partition("\n")[2] for key, (_, text) in candidates.items()}
-    counts = {key: Counter(_tokens(body)) for key, body in bodies.items()}
-    lengths = {key: sum(value.values()) for key, value in counts.items()}
-    average = sum(lengths.values()) / max(len(lengths), 1)
-    frequencies = Counter(term for value in counts.values() for term in value)
-    weights = {term: 0.2 if term.isdigit() else 1.0 for term in _tokens(" ".join(raw_terms))}
     question_words = set(re.findall(r"[a-z0-9]+", question.lower()))
     question_compact = "".join(re.findall(r"[a-z0-9]+", question.lower()))
     generic_labels = {"10k", "10q", "annual", "report", "form", "financial"}
+    acronyms = {term.lower() for term in re.findall(r"\b[A-Z]{2,7}\b", question)} - {"fy", "usd"}
 
     def matches_document(label: str) -> bool:
         names = [term for term in re.findall(r"[a-z0-9]+", label) if term not in generic_labels and not term.isdigit()]
-        return any(term in question_words or (len(term) >= 3 and term in question_compact) for term in names)
+        return any(
+            term in question_words
+            or (len(term) >= 3 and term in question_compact)
+            or any(len(short) >= 3 and term.startswith(short) for short in acronyms)
+            for term in names
+        )
 
     matched = {key for key, label in labels.items() if matches_document(label)}
     eligible = matched or set(candidates)
+    counts = {key: Counter(_tokens(bodies[key])) for key in eligible}
+    lengths = {key: sum(value.values()) for key, value in counts.items()}
+    average = sum(lengths.values()) / max(len(lengths), 1)
+    frequencies = Counter(term for value in counts.values() for term in value)
+    label_terms = set(_tokens(" ".join(labels[key] for key in eligible)))
+    weights = _query_weights(raw_terms, label_terms, aspects)
     fiscal_years = re.findall(r"\bfy\s*((?:19|20)\d{2})\b", question, re.IGNORECASE)
     requested_years = fiscal_years or re.findall(r"\b(?:19|20)\d{2}\b", question)
     report_year = max(requested_years, default="")
@@ -345,9 +390,7 @@ def _rank_pdf_candidates(
     for _, alternatives, heading in aspects:
         terms = {term: 1.0 for term in _tokens(" ".join(alternatives)) if term not in _NOISE}
         aspect_scores = {
-            key: lexical_score(key, terms)
-            + 8.0 * bool(re.search(heading, bodies[key], re.IGNORECASE))
-            + year_alignment[key]
+            key: lexical_score(key, terms) + 8.0 * _has_heading(heading, bodies[key]) + year_alignment[key]
             for key in eligible
         }
         for key in sorted(eligible, key=lambda key: (-aspect_scores[key], -scores[key], key))[:2]:
@@ -355,6 +398,26 @@ def _rank_pdf_candidates(
                 ordered.append(key)
     ordered.extend(key for key in sorted(eligible, key=lambda key: (-scores[key], key)) if key not in ordered)
     return ordered
+
+
+def _has_heading(pattern: str, text: str) -> bool:
+    """Recognize headings whose font runs attach them to a company-name prefix."""
+    return bool(
+        re.search(pattern, text, re.IGNORECASE)
+        or re.search(pattern.removeprefix(r"(?m)^\s*"), text[:700], re.IGNORECASE)
+    )
+
+
+async def _persisted_pdf_candidates(
+    memory: ScopedMemoryApplication,
+) -> dict[tuple[str, str], tuple[MemoryCitation, str]]:
+    """Read active PDF entry versions from the caller's scoped Memory head."""
+    page = await memory.list()
+    return {
+        (record.entry.entry_id, record.entry.entry_version_id): (record.citation, record.entry.text)
+        for record in page.entries
+        if any(source.source_type == "pdf-page" for source in record.entry.sources)
+    }
 
 
 async def search_pdf_pages(
@@ -369,24 +432,20 @@ async def search_pdf_pages(
         return ()
     raw_terms = tuple(dict.fromkeys(term for term in re.findall(r"[a-z]+|\d+", question.lower()) if term not in _NOISE))
     aspects = tuple(aspect for aspect in _ASPECTS if re.search(aspect[0], question.lower()))
-    queries = [" ".join(raw_terms[:24]), *(query for _, alternatives, _ in aspects for query in alternatives)]
-    topical = [term for term in raw_terms if not term.isdigit()]
-    queries.extend(" ".join(topical[start : start + 2]) for start in range(0, min(len(topical), 12), 2))
-    candidates: dict[tuple[str, str], tuple[MemoryCitation, str]] = {}
-    votes: dict[tuple[str, str], float] = {}
-    for query in dict.fromkeys(queries):
-        if not query:
-            continue
-        found = await memory.search(SearchMemoryRequest(query=query, mode="fts", limit=128))
-        for rank, hit in enumerate(found.hits):
-            key = (hit.entry_id, hit.entry_version_id)
-            candidates[key] = (
-                MemoryCitation(memory_ref=hit.memory_ref, entry_id=hit.entry_id, entry_version_id=hit.entry_version_id),
-                hit.text,
-            )
-            votes[key] = votes.get(key, 0.0) + 1 / (60 + rank)
+    # A fixed-size lexical shortlist can omit the relevant statement when many
+    # reports repeat the same financial vocabulary. Read the active, scoped
+    # head through the public API so offline ranking can consider every real
+    # PDF page. Citations come from persisted entry records, never source IDs
+    # reconstructed outside Memory.
+    candidates = await _persisted_pdf_candidates(memory)
     if not candidates:
         return ()
+    votes = dict.fromkeys(candidates, 0.0)
+    found = await memory.search(SearchMemoryRequest(query=" ".join(raw_terms[:24]) or question, mode="fts", limit=128))
+    for rank, hit in enumerate(found.hits):
+        key = (hit.entry_id, hit.entry_version_id)
+        if key in candidates:
+            votes[key] = 1 / (60 + rank)
     ordered = _rank_pdf_candidates(candidates, votes, raw_terms, aspects, question, limit)
     results: list[MemoryCitation] = []
     seen: set[tuple[str, str]] = set()

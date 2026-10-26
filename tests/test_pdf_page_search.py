@@ -6,15 +6,18 @@
 """Real Memory retrieval must preserve complementary PDF pages and document scope."""
 
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 
 from powercontext.builtin.artifacts.memory import MemoryEntryInput
+from powercontext.builtin.artifacts.memory.canonical import entry_content_hash, normalize_entry_text, normalize_text
 from powercontext.builtin.artifacts.memory.protocols import MemoryCandidateRequest
 from powercontext.builtin.persistence.sqlite import SQLiteConfig
 from powercontext.builtin.runtime import (
     BuiltinConfig,
     GetMemoryEntryRequest,
+    SearchMemoryRequest,
     SubmitSourceObservation,
     open_builtin_runtime,
 )
@@ -42,14 +45,30 @@ class PDFEvidencePipeline:
         return tuple(entries)
 
 
-async def test_complementary_statements_survive_restart_and_other_document_noise(tmp_path: Path) -> None:
+def test_complete_pdf_body_limit_preserves_ordinary_memory_validation() -> None:
+    body = "财报 page " * 2000
+    references = ({"source_type": "pdf-page", "source_id": "captured-page"},)
+    assert len(body.encode("utf-8")) > 8192
+    assert normalize_entry_text(body, source_refs=references) == body.strip()
+    assert entry_content_hash(kind="source-evidence", text=body, source_refs=references, artifact_refs=())
+    with pytest.raises(ValueError, match="8192 UTF-8 bytes"):
+        normalize_text(body)
+    with pytest.raises(ValueError, match="8192 UTF-8 bytes"):
+        normalize_entry_text(body, source_refs=({"source_type": "csv-row", "source_id": "row"},))
+    with pytest.raises(ValueError, match="1048576 UTF-8 bytes"):
+        normalize_entry_text("x" * (1024 * 1024 + 1), source_refs=references)
+
+
+async def test_complementary_statements_survive_restart_and_other_document_noise(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     registry = SourceDefinitionRegistry((PDF_PAGE_SOURCE_DEFINITION,))
     config = BuiltinConfig(database=SQLiteConfig(url=f"sqlite+aiosqlite:///{tmp_path / 'pdf.db'}"))
     texts = [
         (
             "ALPHA_2024_10K",
             1,
-            "Forward-looking information.\n" * 70
+            "Forward-looking information.\n" * 400
             + "\nConsolidated Statements of Income\nOperating profit 40. Net revenue 200.",
         ),
         (
@@ -104,3 +123,17 @@ async def test_complementary_statements_survive_restart_and_other_document_noise
             assert {(document, 1), (document, 2)} <= returned
             assert all(item[0] == document and item[1] != 99 for item in returned)
             assert len(citations) <= 6 and len(returned) == len(citations)
+        # A lexical admission filter can yield no candidates even though real
+        # PDF pages exist. Retrieval must still cite the current scoped entries.
+        empty_shortlist = await memory.search(SearchMemoryRequest(query="nonexistentvocabulary", mode="fts"))
+        assert not empty_shortlist.hits
+        monkeypatch.setattr(memory, "search", AsyncMock(return_value=empty_shortlist))
+        citations = await search_pdf_pages(
+            memory, "Calculate FY2024 EBITDA for Alpha from operating income and cash flows.", limit=6
+        )
+        recovered = set()
+        for citation in citations:
+            entry = (await memory.get(GetMemoryEntryRequest(citation=citation))).entry
+            recovered.update(locations[source.source_id] for source in entry.sources)
+        assert {("ALPHA_2024_10K", 1), ("ALPHA_2024_10K", 2)} <= recovered
+        assert all(document == "ALPHA_2024_10K" and number != 99 for document, number in recovered)
