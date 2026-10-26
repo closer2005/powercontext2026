@@ -23,7 +23,7 @@ from powercontext.builtin.persistence.cursors import SourceCursorRepository
 from powercontext.builtin.persistence.database import AsyncDatabase
 from powercontext.builtin.persistence.processing_intents import ArtifactProcessingIntentRepository
 from powercontext.builtin.persistence.supervision import ArtifactProcessingFence, ArtifactProcessingLeaseRepository
-from powercontext.builtin.persistence.tables import PROFILE_POLICIES_TABLE, SOURCE_JOURNAL_HEADS_TABLE
+from powercontext.builtin.persistence.tables import PROFILE_POLICIES_TABLE, SOURCE_JOURNAL_HEADS_TABLE, SOURCES_TABLE
 
 
 async def enabled_profile_scopes(connection: AsyncConnection, scope_ids: tuple[str, ...]) -> frozenset[str]:
@@ -43,6 +43,34 @@ async def enabled_profile_scopes(connection: AsyncConnection, scope_ids: tuple[s
         .with_for_update()
     )
     return frozenset(rows)
+
+
+async def source_count_scopes(
+    connection: AsyncConnection,
+    scope_ids: tuple[str, ...],
+    *,
+    binding_name: str,
+    threshold: int,
+) -> frozenset[str]:
+    """Check bounded journal metadata after each Family's successful cursor."""
+    cursors = await SourceCursorRepository().load_many(connection, scope_ids, binding_name)
+    eligible: set[str] = set()
+    table = SOURCES_TABLE
+    for scope_id in scope_ids:
+        stored = cursors.get(scope_id)
+        after = 0 if stored is None else stored.cursor.sequence
+        # Indexed selection stops at the threshold; payloads and earlier history
+        # never enter the scheduler. Lineage-only Sources count like other rows.
+        position = await connection.scalar(
+            select(table.c.journal_position)
+            .where(table.c.scope_id == scope_id, table.c.journal_position > after)
+            .order_by(table.c.journal_position)
+            .offset(threshold - 1)
+            .limit(1)
+        )
+        if position is not None:
+            eligible.add(scope_id)
+    return frozenset(eligible)
 
 
 class SourceProcessingPendingProvider:
