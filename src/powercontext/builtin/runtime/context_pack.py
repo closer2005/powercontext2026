@@ -22,6 +22,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
+from typing import cast
 
 _PACK_SCHEMA = "powercontext.context-pack.v1"
 _DELTA_SCHEMA = "powercontext.context-pack-delta.v1"
@@ -67,7 +68,7 @@ def _decode_items(value: object) -> tuple[bytes, ...]:
     if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
         raise ContextPackError("Wire chunks must be Base64 string arrays")  # noqa: TRY003
     try:
-        result = tuple(base64.b64decode(item, validate=True) for item in value)
+        result = tuple(base64.b64decode(item, validate=True) for item in cast(list[str], value))
     except (ValueError, binascii.Error) as error:
         raise ContextPackError("Invalid Base64 context chunk") from error  # noqa: TRY003
     if _items(result) != value:

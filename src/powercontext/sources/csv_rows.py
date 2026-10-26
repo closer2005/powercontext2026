@@ -19,7 +19,7 @@ from __future__ import annotations
 import csv
 import io
 import json
-from typing import Self
+from typing import Self, cast
 from urllib.parse import quote
 
 from pydantic import BaseModel, field_validator, model_validator
@@ -150,8 +150,8 @@ def parse_csv_document(value: CSVDocumentInput) -> tuple[CSVRowInput, ...]:
 
 
 class _CSVRowAdapter:
-    input_class = CSVRowInput
-    source_class = CSVRowSource
+    input_class: type[CSVRowInput] = CSVRowInput
+    source_class: type[CSVRowSource] = CSVRowSource
     name = "csv-row"
 
     async def resolve(self, value: CSVRowInput, /) -> CSVRowSource:
@@ -176,7 +176,7 @@ class _CSVRowAdapter:
 class _CSVRowTextEvidenceProjection:
     name = TEXT_EVIDENCE_PROJECTION_KEY.name
     version = TEXT_EVIDENCE_PROJECTION_KEY.version
-    source_class = CSVRowSource
+    source_class: type[CSVRowSource] = CSVRowSource
     output_class: type[BaseModel] = TextEvidence
 
     def project(self, source: CSVRowSource, /) -> TextEvidence:
@@ -195,9 +195,11 @@ class _CSVRowTextEvidenceProjection:
         )
 
 
-CSV_ROW_SOURCE_DEFINITION: SourceDefinition[CSVRowInput, CSVRowSource, CSVRowInput] = AdapterSourceDefinition(
-    _CSVRowAdapter(),
-    projections=(_CSVRowTextEvidenceProjection(),),
+# AdapterSourceDefinition exposes read-only properties where the legacy Protocol
+# declares writable attributes; consumers only read these registration fields.
+CSV_ROW_SOURCE_DEFINITION = cast(
+    SourceDefinition[CSVRowInput, CSVRowSource, CSVRowInput],
+    AdapterSourceDefinition(_CSVRowAdapter(), projections=(_CSVRowTextEvidenceProjection(),)),
 )
 
 __all__ = [
