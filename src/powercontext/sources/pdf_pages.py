@@ -31,6 +31,7 @@ from pypdf import PdfReader
 from powercontext.artifacts import MemoryCitation
 from powercontext.sources.definitions import AdapterSourceDefinition, SourceDefinition
 from powercontext.sources.models import Source, SourceMaterialization
+from powercontext.sources.pdf_text import extract_positioned_text
 from powercontext.sources.projections import TEXT_EVIDENCE_PROJECTION_KEY, TextEvidence
 
 if TYPE_CHECKING:
@@ -83,12 +84,13 @@ def parse_pdf_document(value: PDFDocumentInput) -> tuple[PDFPageInput, ...]:
         reader = PdfReader(io.BytesIO(value.content), strict=True)
         if reader.is_encrypted and not reader.decrypt(""):
             raise ValueError("PDF requires a password")  # noqa: TRY003, TRY301
+        visited: set[int] = set()
         pages = tuple(
             PDFPageInput(
                 document_id=value.document_id,
                 document_sha256=digest,
                 page_number=number,
-                text=_normalize_pdf_spacing(page.extract_text() or ""),
+                text=_normalize_pdf_spacing(extract_positioned_text(page, visited)),
             )
             for number, page in enumerate(reader.pages, 1)
         )
@@ -247,12 +249,12 @@ _NOISE = frozenset([
 # particular company, document, question or annotated evidence location.
 _ASPECTS = (
     (
-        r"\b(income|earnings|profit|ebitda|margin|restructur\w*)\b|\bp\s*&\s*l\b",
+        r"\b(income|earnings|profit|ebitda|margin|cogs|inventory\s+turnover|capital.intensive|restructur\w*)\b|\bp\s*&\s*l\b",
         ("statements income", "operating profit"),
         r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*statements?\s+(?:of\s+)?(?:income|operations|earnings|loss)\b",
     ),
     (
-        r"\b(cash\s*flow\w*|ebitda|depreciation|amorti[sz]ation|capex|capital\s+expenditure\w*)\b|\bd\s*&\s*a\b",
+        r"\b(cash\s*flow\w*|ebitda|depreciation|amorti[sz]ation|capex|capital.intensive|capital\s+expenditure\w*)\b|\bd\s*&\s*a\b",
         ("cash flows", "depreciation amortization"),
         r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*statements?\s+(?:of\s+)?cash\s*flows?\b",
     ),
@@ -262,9 +264,11 @@ _ASPECTS = (
         r"(?m)^\s*(?:net\s+(?:sales|revenue)|(?:consolidated\s+)?statements?\s+(?:of\s+)?(?:income|operations))\b",
     ),
     (
-        r"\b(balance\s+sheet\w*|assets?|liabilit\w*|debt|equity|working\s+capital|current\s+ratio|leverage)\b",
+        r"\b(balance\s+sheet\w*|financial\s+position|assets?|liabilit\w*|debt|equity|working\s+capital|"
+        r"(?:quick|current)\s+ratio|liquidity|inventory|payables?|capital.intensive|leverage)\b",
         ("balance sheets", "assets liabilities"),
-        r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*balance\s+sheets?\b",
+        r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*(?:balance\s+sheets?|"
+        r"statements?\s+(?:of\s+)?financial\s+(?:position|condition))\b",
     ),
     (
         r"\b(geograph\w*|countr\w*|region\w*|primarily\s+operat\w*)\b",
@@ -311,6 +315,7 @@ _ASPECTS = (
 
 
 def _tokens(text: str) -> list[str]:
+    text = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", text)
     terms = re.findall(r"[a-z]+|\d+", text.lower())
     # Light inflection normalization affects ranking, while Memory receives the
     # original words and explicit vocabulary alternatives above.
@@ -365,9 +370,23 @@ def _rank_pdf_candidates(
         )
 
     matched = {key for key, label in labels.items() if matches_document(label)}
+    if not matched and acronyms:
+        # Natural queries may use an abbreviation absent from a compact file
+        # label. Infer it only from the persisted report's own occurrences.
+        alias_labels = {
+            labels[key]
+            for key in candidates
+            if any(re.search(r"\b" + re.escape(alias) + r"\b", bodies[key], re.IGNORECASE) for alias in acronyms)
+        }
+        if len(alias_labels) == 1:
+            matched = {key for key in candidates if labels[key] in alias_labels}
     eligible = matched or set(candidates)
     counts = {key: Counter(_tokens(bodies[key])) for key in eligible}
     lengths = {key: sum(value.values()) for key, value in counts.items()}
+    numeric_density = {
+        key: sum(count for term, count in value.items() if term.isdigit()) / max(lengths[key], 1)
+        for key, value in counts.items()
+    }
     average = sum(lengths.values()) / max(len(lengths), 1)
     frequencies = Counter(term for value in counts.values() for term in value)
     label_terms = set(_tokens(" ".join(labels[key] for key in eligible)))
@@ -403,7 +422,9 @@ def _rank_pdf_candidates(
     for _, alternatives, heading in aspects:
         terms = {term: 1.0 for term in _tokens(" ".join(alternatives)) if term not in _NOISE}
         aspect_scores = {
-            key: lexical_score(key, terms) + 8.0 * _has_heading(heading, bodies[key]) + year_alignment[key]
+            key: lexical_score(key, terms)
+            + 8.0 * _has_heading(heading, bodies[key]) * (1 + min(2 * numeric_density[key], 1.0))
+            + year_alignment[key]
             for key in eligible
         }
         for key in sorted(eligible, key=lambda key: (-aspect_scores[key], -scores[key], key))[:2]:
@@ -415,9 +436,13 @@ def _rank_pdf_candidates(
 
 def _has_heading(pattern: str, text: str) -> bool:
     """Recognize headings whose font runs attach them to a company-name prefix."""
+    text = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", text)
+    compact_pattern = pattern.replace(r"\s+", r"\s*")
     return bool(
         re.search(pattern, text, re.IGNORECASE)
         or re.search(pattern.removeprefix(r"(?m)^\s*"), text[:700], re.IGNORECASE)
+        or re.search(compact_pattern, text, re.IGNORECASE)
+        or re.search(compact_pattern.removeprefix(r"(?m)^\s*"), text[:700], re.IGNORECASE)
     )
 
 

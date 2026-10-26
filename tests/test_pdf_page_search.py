@@ -97,6 +97,61 @@ def test_complete_pdf_body_limit_preserves_ordinary_memory_validation() -> None:
         normalize_entry_text("x" * (1024 * 1024 + 1), source_refs=references)
 
 
+@pytest.mark.parametrize(
+    "mapping", [b"1 beginbfchar\n<03> <000A>\nendbfchar", b"1 beginbfrange\n<03> <03> <000D>\nendbfrange"]
+)
+def test_glyph_controls_do_not_replace_positioned_line_breaks(mapping: bytes) -> None:
+    writer = PdfWriter()
+    cmap = DecodedStreamObject()
+    cmap.set_data(
+        b"/CIDInit /ProcSet findresource begin 12 dict begin begincmap\n"
+        b"1 begincodespacerange\n<00> <FF>\nendcodespacerange\n"
+        + mapping
+        + b"\n3 beginbfchar\n<04> <0065>\n<0A> <002E>\n<0D> <002A>\nendbfchar\nendcmap end end"
+    )
+    font = DictionaryObject({
+        NameObject("/Type"): NameObject("/Font"),
+        NameObject("/Subtype"): NameObject("/Type1"),
+        NameObject("/BaseFont"): NameObject("/Helvetica"),
+        NameObject("/Encoding"): NameObject("/WinAnsiEncoding"),
+        NameObject("/ToUnicode"): writer._add_object(cmap),
+    })
+    page = writer.add_blank_page(width=500, height=200)
+    page[NameObject("/Resources")] = DictionaryObject({
+        NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})
+    })
+    content = DecodedStreamObject()
+    content.set_data(b"BT /F1 12 Tf 10 150 Td (Operating\003income 4\0120\015) Tj 0 -14 Td (Separate line 12) Tj ET")
+    page[NameObject("/Contents")] = writer._add_object(content)
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    pages = parse_pdf_document(PDFDocumentInput(document_id="controls", content=buffer.getvalue()))
+    assert pages[0].text == "Operatingincome 4.0*\nSeparate line 12"
+
+
+def test_scaled_same_baseline_font_fragments_reconnect() -> None:
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=500, height=200)
+    font = DictionaryObject({
+        NameObject("/Type"): NameObject("/Font"),
+        NameObject("/Subtype"): NameObject("/Type1"),
+        NameObject("/BaseFont"): NameObject("/Helvetica"),
+    })
+    page[NameObject("/Resources")] = DictionaryObject({
+        NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})
+    })
+    content = DecodedStreamObject()
+    content.set_data(
+        b"q 0.02 0 0 0.02 10 150 cm BT /F1 600 Tf (Operating statem) Tj ET Q "
+        b"q 0.02 0 0 0.02 110 150 cm BT /F1 600 Tf (ents 40) Tj ET Q"
+    )
+    page[NameObject("/Contents")] = writer._add_object(content)
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    pages = parse_pdf_document(PDFDocumentInput(document_id="fragments", content=buffer.getvalue()))
+    assert pages[0].text.strip() == "Operating statements 40"
+
+
 async def test_complementary_statements_survive_restart_and_other_document_noise(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -114,12 +169,13 @@ async def test_complementary_statements_survive_restart_and_other_document_noise
             2,
             "Consolidated Statements of Cash Flows\nDepreciation and amortization 10. Capital expenditures 5.",
         ),
-        ("BETA_2024_10K", 1, "Consolidated Statements of Income\nOperating income and net sales."),
+        ("BETA_2024_10K", 1, "Consolidated Statements of Income\nOperating income and net sales. Ticker BLC."),
         (
             "BETA_2024_10K",
             2,
             "Consolidated Statements of Cash Flows\nDepreciation and amortization. Capital expenditures.",
         ),
+        ("BETA_2024_10K", 3, "ConsolidatedBalanceSheets\nCurrentAssets 70 CurrentLiabilities 40."),
         *(
             ("ALPHA_2024_10K", number, "Operating activities and EBITDA. Depreciation amortization capex " * 8)
             for number in range(3, 30)
@@ -175,3 +231,12 @@ async def test_complementary_statements_survive_restart_and_other_document_noise
             recovered.update(locations[source.source_id] for source in entry.sources)
         assert {("ALPHA_2024_10K", 1), ("ALPHA_2024_10K", 2)} <= recovered
         assert all(document == "ALPHA_2024_10K" and number != 99 for document, number in recovered)
+        citations = await search_pdf_pages(
+            memory, "Does BLC have adequate liquidity based on its FY2024 quick ratio?", limit=4
+        )
+        returned = set()
+        for citation in citations:
+            entry = (await memory.get(GetMemoryEntryRequest(citation=citation))).entry
+            returned.update(locations[source.source_id] for source in entry.sources)
+        assert ("BETA_2024_10K", 3) in returned
+        assert all(document == "BETA_2024_10K" for document, _ in returned)
