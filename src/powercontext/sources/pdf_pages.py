@@ -133,6 +133,7 @@ PDF_PAGE_SOURCE_DEFINITION = cast(
     AdapterSourceDefinition(_PDFPageAdapter(), projections=(_PDFTextProjection(),)),
 )
 
+# Query instructions and units contribute little evidence about a financial page.
 _NOISE = frozenset([
     "a",
     "an",
@@ -182,68 +183,148 @@ _NOISE = frozenset([
     "10",
     "k",
     "10k",
+    "any",
+    "as",
+    "it",
+    "that",
+    "if",
+    "then",
+    "state",
+    "explicitly",
+    "directly",
+    "outlined",
+    "shown",
+    "details",
+    "use",
+    "using",
+    "can",
+    "only",
+    "give",
+    "respond",
+    "response",
+    "question",
+    "assuming",
+    "assume",
+    "perspective",
+    "investment",
+    "analyst",
+    "million",
+    "millions",
+    "usd",
+    "dollars",
+    "percent",
+    "quantity",
+    "define",
+    "less",
+    "most",
+    "important",
+    "ongoing",
+    "materially",
 ])
-_FACETS = (
-    (r"\b(ebitda|depreciation|amortization)\b", "operating income depreciation amortization"),
-    (r"\b(capex|capital expenditure|capital spending)\b", "capital expenditures purchases property plant equipment"),
-    (r"\b(geograph|countr|region|primarily operat)", "geographic segments countries international operations"),
-    (r"\b(legal|litigation|lawsuit|battles)\b", "legal proceedings litigation contingencies"),
-    (r"\brestructur", "restructuring charges costs impairment"),
-    (r"\bmargin\b", "net revenue sales operating income"),
+
+# Short queries deliberately fit the public Memory API's lexical admission floor.
+# Each aspect has alternate vocabulary and a heading cue; none identifies a
+# particular company, document, question or annotated evidence location.
+_ASPECTS = (
+    (
+        r"\b(income|earnings|profit|ebitda|margin|restructur\w*)\b|\bp\s*&\s*l\b",
+        ("statements income", "operating profit"),
+        r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*statements?\s+(?:of\s+)?(?:income|operations|earnings|loss)\b",
+    ),
+    (
+        r"\b(cash\s*flow\w*|ebitda|depreciation|amorti[sz]ation|capex|capital\s+expenditure\w*)\b|\bd\s*&\s*a\b",
+        ("cash flows", "depreciation amortization"),
+        r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*statements?\s+(?:of\s+)?cash\s*flows?\b",
+    ),
+    (
+        r"\b(revenue\w*|sales|margin|growth)\b",
+        ("net revenue", "net sales"),
+        r"(?m)^\s*(?:net\s+(?:sales|revenue)|(?:consolidated\s+)?statements?\s+(?:of\s+)?(?:income|operations))\b",
+    ),
+    (
+        r"\b(balance\s+sheet\w*|assets?|liabilit\w*|debt|equity|working\s+capital|current\s+ratio|leverage)\b",
+        ("balance sheets", "assets liabilities"),
+        r"(?m)^\s*(?:(?:condensed|consolidated|combined)\s+)*balance\s+sheets?\b",
+    ),
+    (
+        r"\b(geograph\w*|countr\w*|region\w*|primarily\s+operat\w*)\b",
+        ("geographic segments", "international operations", "countries divisions"),
+        r"(?m)^\s*(?:item\s+\d+[.:]?\s*)?(?:geograph\w*|business\b|our\s+(?:divisions|business))",
+    ),
+    (
+        r"\b(legal|litigation|lawsuit\w*|battles?|contingen\w*)\b",
+        ("legal proceedings", "litigation contingencies"),
+        r"(?m)^\s*(?:(?:item|note)\s+\d+[.:]?\s*)?(?:legal\s+proceedings|litigation|contingencies)\b",
+    ),
+    (
+        r"\b(restructur\w*|impairment\w*)\b",
+        ("restructuring charges", "restructuring costs"),
+        r"(?m)^\s*(?:(?:note\s+)?\d+[.:]?\s*)?(?:restructuring|impairment)\b",
+    ),
+    (
+        r"\b(tax|taxes|taxation)\b",
+        ("income taxes", "effective tax"),
+        r"(?m)^\s*(?:(?:note\s+)?\d+[.:]?\s*)?(?:income\s+taxes|effective\s+tax)\b",
+    ),
+    (
+        r"\b(dividend\w*|repurchase\w*|buybacks?|shares?|stock)\b",
+        ("shares repurchased", "dividends stock"),
+        r"(?m)^\s*(?:dividends|repurchases|stockholders|shareholders)\b",
+    ),
 )
 
 
 def _tokens(text: str) -> list[str]:
-    return re.findall(r"[a-z]+|\d+", text.lower())
+    terms = re.findall(r"[a-z]+|\d+", text.lower())
+    # Light inflection normalization affects ranking, while Memory receives the
+    # original words and explicit vocabulary alternatives above.
+    return [
+        term[:-3] + "y"
+        if len(term) > 5 and term.endswith("ies")
+        else term[:-1]
+        if len(term) > 4 and term.endswith("s") and not term.endswith(("ss", "us", "is"))
+        else term
+        for term in terms
+    ]
 
 
-async def search_pdf_pages(  # noqa: C901
-    memory: ScopedMemoryApplication, question: str, limit: int = 10
-) -> tuple[MemoryCitation, ...]:
-    """Retrieve complementary lexical facets, then rank complete, persisted pages.
-
-    Financial terminology expansion is independent of document identity and never
-    consults answers or page annotations. Every returned identity came from search.
-    """
-    from powercontext.builtin.runtime.models import GetMemoryEntryRequest, SearchMemoryRequest
-
-    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 0:
-        raise ValueError("limit must be a nonnegative integer")  # noqa: TRY003
-    if limit == 0 or not question.strip():
-        return ()
-    terms = tuple(dict.fromkeys(token for token in _tokens(question) if token not in _NOISE))
-    facets = [text for pattern, text in _FACETS if re.search(pattern, question.lower())]
-    queries = list(dict.fromkeys([" ".join(terms[:24]), *facets]))
-    # Shorter overlapping queries rescue evidence that lacks most question words.
-    topical = [term for term in terms if not term.isdigit()]
-    queries.extend(" ".join(topical[start : start + 4]) for start in range(0, len(topical), 3))
-    candidates: dict[tuple[str, str], tuple[MemoryCitation, str]] = {}
-    ranks: Counter[tuple[str, str]] = Counter()
-    for query in dict.fromkeys(queries):
-        if not query:
-            continue
-        found = await memory.search(SearchMemoryRequest(query=query, mode="fts", limit=100))
-        for rank, hit in enumerate(found.hits):
-            key = (hit.entry_id, hit.entry_version_id)
-            candidates[key] = (
-                MemoryCitation(memory_ref=hit.memory_ref, entry_id=hit.entry_id, entry_version_id=hit.entry_version_id),
-                hit.text,
-            )
-            ranks[key] += 1 / (60 + rank)
-    if not candidates:
-        return ()
-    counts = {key: Counter(_tokens(text)) for key, (_, text) in candidates.items()}
+def _rank_pdf_candidates(
+    candidates: dict[tuple[str, str], tuple[MemoryCitation, str]],
+    votes: dict[tuple[str, str], float],
+    raw_terms: tuple[str, ...],
+    aspects: tuple[tuple[str, tuple[str, ...], str], ...],
+    question: str,
+    limit: int,
+) -> list[tuple[str, str]]:
+    """Rank retrieved pages with document alignment and requested-aspect coverage."""
+    labels = {key: text.partition("\n")[0].lower() for key, (_, text) in candidates.items()}
+    bodies = {key: text.partition("\n")[2] for key, (_, text) in candidates.items()}
+    counts = {key: Counter(_tokens(body)) for key, body in bodies.items()}
     lengths = {key: sum(value.values()) for key, value in counts.items()}
-    average = sum(lengths.values()) / len(lengths)
-    weights = Counter(dict.fromkeys(terms, 1.0))
-    for facet in facets:
-        for term in _tokens(facet):
-            weights[term] += 0.45
+    average = sum(lengths.values()) / max(len(lengths), 1)
     frequencies = Counter(term for value in counts.values() for term in value)
+    weights = {term: 0.2 if term.isdigit() else 1.0 for term in _tokens(" ".join(raw_terms))}
+    question_words = set(re.findall(r"[a-z0-9]+", question.lower()))
+    question_compact = "".join(re.findall(r"[a-z0-9]+", question.lower()))
+    generic_labels = {"10k", "10q", "annual", "report", "form", "financial"}
 
-    def score(key: tuple[str, str]) -> float:
-        total = ranks[key]
-        for term, weight in weights.items():
+    def matches_document(label: str) -> bool:
+        names = [term for term in re.findall(r"[a-z0-9]+", label) if term not in generic_labels and not term.isdigit()]
+        return any(term in question_words or (len(term) >= 3 and term in question_compact) for term in names)
+
+    matched = {key for key, label in labels.items() if matches_document(label)}
+    eligible = matched or set(candidates)
+    fiscal_years = re.findall(r"\bfy\s*((?:19|20)\d{2})\b", question, re.IGNORECASE)
+    requested_years = fiscal_years or re.findall(r"\b(?:19|20)\d{2}\b", question)
+    report_year = max(requested_years, default="")
+    year_alignment = {
+        key: 8.0 if report_year and report_year in re.findall(r"(?:19|20)\d{2}", labels[key]) else 0.0
+        for key in eligible
+    }
+
+    def lexical_score(key: tuple[str, str], terms: dict[str, float]) -> float:
+        total = 0.0
+        for term, weight in terms.items():
             frequency = counts[key][term]
             if frequency:
                 inverse = math.log(1 + (len(counts) - frequencies[term] + 0.5) / (frequencies[term] + 0.5))
@@ -256,9 +337,60 @@ async def search_pdf_pages(  # noqa: C901
                 )
         return total
 
+    scores = {key: lexical_score(key, weights) + votes[key] + year_alignment[key] for key in eligible}
+    ordered: list[tuple[str, str]] = []
+    # Reserve at most half the output for separate requested financial aspects.
+    # A cash-flow-heavy question must still be able to retrieve its income page.
+    coverage_budget = min(limit // 2, len(aspects) * 2)
+    for _, alternatives, heading in aspects:
+        terms = {term: 1.0 for term in _tokens(" ".join(alternatives)) if term not in _NOISE}
+        aspect_scores = {
+            key: lexical_score(key, terms)
+            + 8.0 * bool(re.search(heading, bodies[key], re.IGNORECASE))
+            + year_alignment[key]
+            for key in eligible
+        }
+        for key in sorted(eligible, key=lambda key: (-aspect_scores[key], -scores[key], key))[:2]:
+            if aspect_scores[key] > 0 and key not in ordered and len(ordered) < coverage_budget:
+                ordered.append(key)
+    ordered.extend(key for key in sorted(eligible, key=lambda key: (-scores[key], key)) if key not in ordered)
+    return ordered
+
+
+async def search_pdf_pages(
+    memory: ScopedMemoryApplication, question: str, limit: int = 10
+) -> tuple[MemoryCitation, ...]:
+    """Retrieve real pages and retain evidence for complementary query aspects."""
+    from powercontext.builtin.runtime.models import GetMemoryEntryRequest, SearchMemoryRequest
+
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 0:
+        raise ValueError("limit must be a nonnegative integer")  # noqa: TRY003
+    if limit == 0 or not question.strip():
+        return ()
+    raw_terms = tuple(dict.fromkeys(term for term in re.findall(r"[a-z]+|\d+", question.lower()) if term not in _NOISE))
+    aspects = tuple(aspect for aspect in _ASPECTS if re.search(aspect[0], question.lower()))
+    queries = [" ".join(raw_terms[:24]), *(query for _, alternatives, _ in aspects for query in alternatives)]
+    topical = [term for term in raw_terms if not term.isdigit()]
+    queries.extend(" ".join(topical[start : start + 2]) for start in range(0, min(len(topical), 12), 2))
+    candidates: dict[tuple[str, str], tuple[MemoryCitation, str]] = {}
+    votes: dict[tuple[str, str], float] = {}
+    for query in dict.fromkeys(queries):
+        if not query:
+            continue
+        found = await memory.search(SearchMemoryRequest(query=query, mode="fts", limit=128))
+        for rank, hit in enumerate(found.hits):
+            key = (hit.entry_id, hit.entry_version_id)
+            candidates[key] = (
+                MemoryCitation(memory_ref=hit.memory_ref, entry_id=hit.entry_id, entry_version_id=hit.entry_version_id),
+                hit.text,
+            )
+            votes[key] = votes.get(key, 0.0) + 1 / (60 + rank)
+    if not candidates:
+        return ()
+    ordered = _rank_pdf_candidates(candidates, votes, raw_terms, aspects, question, limit)
     results: list[MemoryCitation] = []
     seen: set[tuple[str, str]] = set()
-    for key in sorted(candidates, key=lambda key: (-score(key), key)):
+    for key in ordered:
         citation = candidates[key][0]
         entry = (await memory.get(GetMemoryEntryRequest(citation=citation))).entry
         pages = tuple(
