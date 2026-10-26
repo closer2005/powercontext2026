@@ -61,6 +61,19 @@ class PDFPageInput(BaseModel):
         return PDFDocumentInput.nonblank_id(value)
 
 
+def _normalize_pdf_spacing(text: str) -> str:
+    """Remove encoded layout padding and reconnect short split font runs.
+
+    Some financial PDFs paint nonbreaking padding between text fragments and
+    split a single word across consecutive runs. Preserve ordinary spaces and
+    physical page boundaries; only normalize those encoded layout separators.
+    """
+    if "\xa0" in text:
+        text = re.sub(r"(?<=\xa0)([a-zA-Z]{1,6})\n(?=[a-z])", r"\1", text)
+        text = text.replace("\xa0", "")
+    return text
+
+
 def parse_pdf_document(value: PDFDocumentInput) -> tuple[PDFPageInput, ...]:
     """Extract every physical page before returning any result."""
     digest = hashlib.sha256(value.content).hexdigest()
@@ -75,7 +88,7 @@ def parse_pdf_document(value: PDFDocumentInput) -> tuple[PDFPageInput, ...]:
                 document_id=value.document_id,
                 document_sha256=digest,
                 page_number=number,
-                text=page.extract_text() or "",
+                text=_normalize_pdf_spacing(page.extract_text() or ""),
             )
             for number, page in enumerate(reader.pages, 1)
         )

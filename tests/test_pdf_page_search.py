@@ -5,10 +5,13 @@
 
 """Real Memory retrieval must preserve complementary PDF pages and document scope."""
 
+import io
 from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
+from pypdf import PdfWriter
+from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from powercontext.builtin.artifacts.memory import MemoryEntryInput
 from powercontext.builtin.artifacts.memory.canonical import entry_content_hash, normalize_entry_text, normalize_text
@@ -28,7 +31,13 @@ from powercontext.sources import (
     manifest_for_definition,
     project_source_for_transport,
 )
-from powercontext.sources.pdf_pages import PDF_PAGE_SOURCE_DEFINITION, PDFPageInput, search_pdf_pages
+from powercontext.sources.pdf_pages import (
+    PDF_PAGE_SOURCE_DEFINITION,
+    PDFDocumentInput,
+    PDFPageInput,
+    parse_pdf_document,
+    search_pdf_pages,
+)
 from powercontext.sources.projections import TEXT_EVIDENCE_PROJECTION_KEY
 
 
@@ -43,6 +52,35 @@ class PDFEvidencePipeline:
             assert isinstance(content, str)
             entries.append(MemoryEntryInput(kind="source-evidence", text=content, sources=(source,)))
         return tuple(entries)
+
+
+def test_pdf_layout_padding_and_split_runs_preserve_page_boundaries() -> None:
+    writer = PdfWriter()
+    font = DictionaryObject({
+        NameObject("/Type"): NameObject("/Font"),
+        NameObject("/Subtype"): NameObject("/Type1"),
+        NameObject("/BaseFont"): NameObject("/Helvetica"),
+        NameObject("/Encoding"): NameObject("/WinAnsiEncoding"),
+    })
+    resources = DictionaryObject({NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})})
+    content = (
+        b"BT /F1 12 Tf 10 150 Td (Net\240income 42) Tj "
+        b"0 -14 Td (Merchant\240cash\240advance\240r) Tj "
+        b"0 -14 Td (eceivable 10) Tj ET",
+        b"BT /F1 12 Tf 10 150 Td (Regular spaces 17) Tj ET",
+    )
+    for data in content:
+        page = writer.add_blank_page(width=500, height=200)
+        page[NameObject("/Resources")] = resources
+        stream = DecodedStreamObject()
+        stream.set_data(data)
+        page[NameObject("/Contents")] = writer._add_object(stream)
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    pages = parse_pdf_document(PDFDocumentInput(document_id="spacing", content=buffer.getvalue()))
+    assert [page.page_number for page in pages] == [1, 2]
+    assert pages[0].text == "Netincome 42\nMerchantcashadvancereceivable 10"
+    assert pages[1].text == "Regular spaces 17"
 
 
 def test_complete_pdf_body_limit_preserves_ordinary_memory_validation() -> None:
