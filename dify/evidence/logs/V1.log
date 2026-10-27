@@ -1,21 +1,21 @@
 ==============================================================================
-[2026-10-28T04:18:34] 立案与开庭
+[2026-10-28T04:27:31] 立案与开庭
 QUERY: 我要起诉我家的充电线，罪名是通敌，要求它当庭道歉
-CONV : 5e2851b8-d60c-49bb-8531-ec6f997ccc8b | HTTP 200 | 27.68s
+CONV : dc0182ab-feca-4973-ba69-9e24dd2395af | HTTP 200 | 57.80s
 ANSWER:
 📁 立案成功，案号：#0001
 
 
-离谱刑初字第0001号，大胆问来，这充电线通敌之罪当何状？
-被告「充电线」：冤枉啊，我只是连接电源，帮大家充电，我没犯什么错误！
+离谱#0001，本官升堂，大胆问，你为何通敌？带充电线上来！
+被告「充电线」：我只是传输电能，日久见人心，我心无二心！
 （补充证据继续辩论，或输入「宣判」结案）
-RAW: {"event": "message", "task_id": "983de8d0-ec55-4fa5-8979-8fafdcb5e8a0", "id": "c54d84a7-b99f-4142-853d-93920f37c03c", "message_id": "c54d84a7-b99f-4142-853d-93920f37c03c", "conversation_id": "5e2851b8-d60c-49bb-8531-ec6f997ccc8b", "mode": "advanced-chat", "answer": "📁 立案成功，案号：#0001\n\n\n离谱刑初字第0001号，大胆问来，这充电线通敌之罪当何状？\n被告「充电线」：冤枉啊，我只是连接电源，帮大家充电，我没犯什么错误！\n（补充证据继续辩论，或输入「宣判」结案）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 1312, "prompt_unit_price": "0", "prompt_price_unit": "0", "prompt_price": "0", "completion_tokens": 80, "completion_unit_price": "0", "completion_price_unit": "0", "completion_price": "0", "total_tokens": 1392, "total_price": "0", "currency": "USD", "latency": 24.862000000000002, "time_to_first_token": 12.99, "time_to_generate": 14.047}, "reasoning": {}}, "created_at": 1793161086}
+RAW: {"event": "message", "task_id": "20d58b5c-eb38-4763-99c8-362bfcf3d716", "id": "80e87e80-8b2d-41e0-a022-2355e5373d74", "message_id": "80e87e80-8b2d-41e0-a022-2355e5373d74", "conversation_id": "dc0182ab-feca-4973-ba69-9e24dd2395af", "mode": "advanced-chat", "answer": "📁 立案成功，案号：#0001\n\n\n离谱#0001，本官升堂，大胆问，你为何通敌？带充电线上来！\n被告「充电线」：我只是传输电能，日久见人心，我心无二心！\n（补充证据继续辩论，或输入「宣判」结案）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 1312, "prompt_unit_price": "0", "prompt_price_unit": "0", "prompt_price": "0", "completion_tokens": 79, "completion_unit_price": "0", "completion_price_unit": "0", "completion_price": "0", "total_tokens": 1391, "total_price": "0", "currency": "USD", "latency": 52.783, "time_to_first_token": 25.906, "time_to_generate": 30.822}, "reasoning": {}}, "created_at": 1793161593}
 ==============================================================================
-[2026-10-28T04:18:41] 补充证据辩论
+[2026-10-28T04:27:51] 补充证据辩论
 QUERY: 补充证据：它半夜三点偷偷发烫，还把我的手机电量从80%吸到20%
-CONV : 5e2851b8-d60c-49bb-8531-ec6f997ccc8b | HTTP 200 | 7.79s
+CONV : dc0182ab-feca-4973-ba69-9e24dd2395af | HTTP 200 | 19.94s
 ANSWER:
 法官：这点证据有点意思，被告你怎么解释？
 被告「充电线」："我只是发热，又不是发疯，本官明察！"
 （补充证据继续辩论，或输入「宣判」结案）
-RAW: {"event": "message", "task_id": "60fa4bc0-88c4-48b8-a427-9239b2c789c6", "id": "b53a15aa-f276-452a-ac38-e9a31f6c082b", "message_id": "b53a15aa-f276-452a-ac38-e9a31f6c082b", "conversation_id": "5e2851b8-d60c-49bb-8531-ec6f997ccc8b", "mode": "advanced-chat", "answer": "法官：这点证据有点意思，被告你怎么解释？\n被告「充电线」：\"我只是发热，又不是发疯，本官明察！\"\n（补充证据继续辩论，或输入「宣判」结案）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 719, "prompt_unit_price": "0", "prompt_price_unit": "0", "prompt_price": "0", "completion_tokens": 32, "completion_unit_price": "0", "completion_price_unit": "0", "completion_price": "0", "total_tokens": 751, "total_price": "0", "currency": "USD", "latency": 7.255, "time_to_first_token": 2.743, "time_to_generate": 4.796}, "reasoning": {}}, "created_at": 1793161114}
+RAW: {"event": "message", "task_id": "54a14f93-ec2c-4e4e-8e9e-ed1351447a0a", "id": "0aa1ab39-e82a-4466-915e-167b19361392", "message_id": "0aa1ab39-e82a-4466-915e-167b19361392", "conversation_id": "dc0182ab-feca-4973-ba69-9e24dd2395af", "mode": "advanced-chat", "answer": "法官：这点证据有点意思，被告你怎么解释？\n被告「充电线」：\"我只是发热，又不是发疯，本官明察！\"\n（补充证据继续辩论，或输入「宣判」结案）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 719, "prompt_unit_price": "0", "prompt_price_unit": "0", "prompt_price": "0", "completion_tokens": 32, "completion_unit_price": "0", "completion_price_unit": "0", "completion_price": "0", "total_tokens": 751, "total_price": "0", "currency": "USD", "latency": 18.958, "time_to_first_token": 5.438, "time_to_generate": 13.997}, "reasoning": {}}, "created_at": 1793161651}

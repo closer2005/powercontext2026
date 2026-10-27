@@ -1,6 +1,6 @@
 {
   "recorded_at": "2026-10-28T03:38:46",
-  "note": "DSL 导入结果与 draft 回读（app-engineer 实测）",
+  "note": "DSL 导入结果与 draft 回读（app-engineer 实测）（webapp access token 已脱敏）",
   "apps_list_http": 200,
   "apps": [
     {
@@ -51,6 +51,6 @@
     "mode": "advanced-chat",
     "enable_site": true,
     "enable_api": true,
-    "site_access_token": "K8QbQ7FyPrrWha2C"
+    "site_access_token": "***REDACTED***"
   }
 }

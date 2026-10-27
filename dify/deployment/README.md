@@ -172,9 +172,9 @@ docker exec -it seekdb mysql -h127.0.0.1 -P2881 -uroot -p"$SEEKDB_PASSWORD" -e "
 1. **知识库**：控制台 → 知识库 → 创建《荒诞法典》→ 上传 `knowledge/absurd_codex.md`
    → 通用分段（分隔符 `\n## `、最大 500 / 重叠 50）→ 高质量索引（`bge-small-zh-v1.5`，512 维）。
    详细配置见 `knowledge/README.md`。
-2. **导入 DSL**：创建应用 → 导入 DSL → `apps/absurd-court.chatflow.yml`（导入后画布 22 节点/25 连线）。
+2. **导入 DSL**：创建应用 → 导入 DSL → `apps/absurd-court.chatflow.yml`（导入后画布 25 节点/28 连线）。
 3. **绑定知识库**：画布中打开 `retrieve_codex` 节点，重新选择《荒诞法典》（或带 `--dataset-id` 重新生成 DSL）。
-4. **检查模型**：4 个 LLM 节点（`parse_llm` / `opening_llm` / `debate_llm` / `verdict_llm`）选中 `qwen2.5-3b-instruct`。
+4. **检查模型**：5 个 LLM 节点（`parse_llm` / `opening_llm` / `defendant_llm` / `debate_llm` / `verdict_llm`）选中 `qwen2.5-3b-instruct`。
 5. **检查服务地址**：4 个 HTTP 节点 URL 为 `http://host.docker.internal:8899/...`。
 6. 保存 → **发布** → 访问 API → 创建应用 API Key（`app-` 开头）。
 

@@ -1,12 +1,12 @@
 ==============================================================================
-[2026-10-28T04:19:29] 无意义输入
+[2026-10-28T04:31:09] 无意义输入
 QUERY: asdf
-CONV : 80856dbb-ccac-4b60-88d9-70f6293a2c57 | HTTP 200 | 13.45s
+CONV : ae43eabc-06f4-4947-b0cb-4024eb7d1638 | HTTP 200 | 51.81s
 ANSWER:
 📁 立案成功，案号：#0003
 
 
-离谱刑初字第0003号，大胆起来，原告，带原告上来。
-被告「asdf」：日历君，你冤枉我了，这是我的使命，提醒你上班别迟到！
+离谱刑初字第0003号，大胆问你，昨晚你到底在哪儿睡觉？
+被告「asdf」：你太夸张了吧，我只是表示我还在充电，没有占床。
 （补充证据继续辩论，或输入「宣判」结案）
-RAW: {"event": "message", "task_id": "b9e4877f-5a14-4b99-a2ac-f858ba90b0cd", "id": "b66294b9-dd29-41e5-ac0f-541c7e192b58", "message_id": "b66294b9-dd29-41e5-ac0f-541c7e192b58", "conversation_id": "80856dbb-ccac-4b60-88d9-70f6293a2c57", "mode": "advanced-chat", "answer": "📁 立案成功，案号：#0003\n\n\n离谱刑初字第0003号，大胆起来，原告，带原告上来。\n被告「asdf」：日历君，你冤枉我了，这是我的使命，提醒你上班别迟到！\n（补充证据继续辩论，或输入「宣判」结案）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 1227, "prompt_unit_price": "0", "prompt_price_unit": "0", "prompt_price": "0", "completion_tokens": 77, "completion_unit_price": "0", "completion_price_unit": "0", "completion_price": "0", "total_tokens": 1304, "total_price": "0", "currency": "USD", "latency": 11.606, "time_to_first_token": 6.535, "time_to_generate": 6.679}, "reasoning": {}}, "created_at": 1793161155}
+RAW: {"event": "message", "task_id": "f1527ff0-7e27-401e-b898-cf4062c237e5", "id": "49ed6b74-8535-41dc-82d2-5d01c9d4b2cd", "message_id": "49ed6b74-8535-41dc-82d2-5d01c9d4b2cd", "conversation_id": "ae43eabc-06f4-4947-b0cb-4024eb7d1638", "mode": "advanced-chat", "answer": "📁 立案成功，案号：#0003\n\n\n离谱刑初字第0003号，大胆问你，昨晚你到底在哪儿睡觉？\n被告「asdf」：你太夸张了吧，我只是表示我还在充电，没有占床。\n（补充证据继续辩论，或输入「宣判」结案）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 1227, "prompt_unit_price": "0", "prompt_price_unit": "0", "prompt_price": "0", "completion_tokens": 74, "completion_unit_price": "0", "completion_price_unit": "0", "completion_price": "0", "total_tokens": 1301, "total_price": "0", "currency": "USD", "latency": 48.775, "time_to_first_token": 23.304, "time_to_generate": 28.004}, "reasoning": {}}, "created_at": 1793161817}

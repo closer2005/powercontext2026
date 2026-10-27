@@ -1,7 +1,7 @@
 ==============================================================================
-[2026-10-28T04:19:15] 玩法说明
+[2026-10-28T04:30:17] 玩法说明
 QUERY: 怎么玩
-CONV : 5c34a706-f699-4701-9af0-ceb74b76a757 | HTTP 200 | 0.25s
+CONV : cbf447f3-bab4-4fe7-b5f3-deca7d450b90 | HTTP 200 | 0.53s
 ANSWER:
 ⚖️ 欢迎来到离谱法庭 · The Absurd Court
 
@@ -15,4 +15,4 @@ ANSWER:
 🧾 示例：「我要起诉周一，罪名是恶意循环，要求它赔偿一个周末」
 
 （想结案请输入「宣判」；想换一场官司请先宣判，或随时输入「怎么玩」回来看说明。）
-RAW: {"event": "message", "task_id": "a1e3caed-36a2-4937-aeff-7d935000eccc", "id": "bfc6fbe4-8d4a-4be5-9a3d-9581b5aba1ee", "message_id": "bfc6fbe4-8d4a-4be5-9a3d-9581b5aba1ee", "conversation_id": "5c34a706-f699-4701-9af0-ceb74b76a757", "mode": "advanced-chat", "answer": "⚖️ 欢迎来到离谱法庭 · The Absurd Court\n\n【四步玩法】\n1️⃣ 立案：直接说你要起诉什么，例如「我要起诉我家的充电线，罪名是通敌，要求它当庭道歉」。\n2️⃣ 开庭：本官当庭宣读案号并检索你的旧案底，被告（物件成精）会当场狡辩或反诉。\n3️⃣ 辩论：继续补充证据、威胁、求情、胡搅蛮缠，法官和被告都会接话。\n4️⃣ 宣判：输入「宣判」，本官检索《荒诞法典》并参考先例，当庭宣读离谱判决书，案卷归档进 seekdb。\n\n📜 输入「查阅我的案底」可查看立案数、胜败战绩与你的法庭称号。\n🧾 示例：「我要起诉周一，罪名是恶意循环，要求它赔偿一个周末」\n\n（想结案请输入「宣判」；想换一场官司请先宣判，或随时输入「怎么玩」回来看说明。）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 0, "prompt_unit_price": "0.0", "prompt_price_unit": "0.0", "prompt_price": "0.0", "completion_tokens": 0, "completion_unit_price": "0.0", "completion_price_unit": "0.0", "completion_price": "0.0", "total_tokens": 0, "total_price": "0.0", "currency": "USD", "latency": 0.0, "time_to_first_token": 0.127, "time_to_generate": 0.0}, "reasoning": {}}, "created_at": 1793161155}
+RAW: {"event": "message", "task_id": "b0bf98ca-50a6-4471-ac46-143942be4683", "id": "e0d1e8e5-3532-4b04-803b-40809aa44cd9", "message_id": "e0d1e8e5-3532-4b04-803b-40809aa44cd9", "conversation_id": "cbf447f3-bab4-4fe7-b5f3-deca7d450b90", "mode": "advanced-chat", "answer": "⚖️ 欢迎来到离谱法庭 · The Absurd Court\n\n【四步玩法】\n1️⃣ 立案：直接说你要起诉什么，例如「我要起诉我家的充电线，罪名是通敌，要求它当庭道歉」。\n2️⃣ 开庭：本官当庭宣读案号并检索你的旧案底，被告（物件成精）会当场狡辩或反诉。\n3️⃣ 辩论：继续补充证据、威胁、求情、胡搅蛮缠，法官和被告都会接话。\n4️⃣ 宣判：输入「宣判」，本官检索《荒诞法典》并参考先例，当庭宣读离谱判决书，案卷归档进 seekdb。\n\n📜 输入「查阅我的案底」可查看立案数、胜败战绩与你的法庭称号。\n🧾 示例：「我要起诉周一，罪名是恶意循环，要求它赔偿一个周末」\n\n（想结案请输入「宣判」；想换一场官司请先宣判，或随时输入「怎么玩」回来看说明。）", "metadata": {"annotation_reply": null, "retriever_resources": [], "usage": {"prompt_tokens": 0, "prompt_unit_price": "0.0", "prompt_price_unit": "0.0", "prompt_price": "0.0", "completion_tokens": 0, "completion_unit_price": "0.0", "completion_price_unit": "0.0", "completion_price": "0.0", "total_tokens": 0, "total_price": "0.0", "currency": "USD", "latency": 0.0, "time_to_first_token": 0.286, "time_to_generate": 0.0}, "reasoning": {}}, "created_at": 1793161817}

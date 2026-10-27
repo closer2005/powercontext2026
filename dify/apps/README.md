@@ -75,7 +75,7 @@ model:    qwen2.5-3b-instruct
 
 换模型有两种方式：
 
-- **UI**：逐个打开 4 个 LLM 节点（`parse_llm` / `opening_llm` / `debate_llm` / `verdict_llm`），
+- **UI**：逐个打开 5 个 LLM 节点（`parse_llm` / `opening_llm` / `defendant_llm` / `debate_llm` / `verdict_llm`），
   在模型下拉中重新选择；
 - **脚本**：重新生成 DSL 后导入：
   ```bash
