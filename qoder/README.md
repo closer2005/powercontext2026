@@ -5,6 +5,7 @@
 > OceanBase 2026 数据库大赛 · Qoder 赛题（题目 600078）参赛作品。
 > 作品展示网站（Qoder Sites 发布，公开可访问）：**https://citeseek-gzqd7ingk4d.qoder.zone**
 > 开发方式：Qoder CN CLI（账号 `nick1732629033`，UID `01a17ebb-b33f-7606-8a7e-d48daeafdadf`），开发记录见 [docs/QODER_DEV_RECORD.md](docs/QODER_DEV_RECORD.md)。
+> 提交与发布记录（站点发布 / 平台提测 / 验证证据）：[docs/SUBMISSION.md](docs/SUBMISSION.md)。
 
 ## 快速开始
 
