@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CiteSeek 知源 · 可溯源笔记检索助手</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span>CiteSeek 知源</span>
+        <span class="brand-sub">可溯源笔记检索助手</span>
+      </div>
+      <nav class="tab-bar" role="tablist" aria-label="主导航">
+        <button class="tab-btn" role="tab" aria-selected="true" aria-controls="view-search" id="tab-search" data-view="search">检索</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="view-library" id="tab-library" data-view="library">资料库</button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="view-review" id="tab-review" data-view="review">复习</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- ===== 检索视图 ===== -->
+    <section class="view active" id="view-search" role="tabpanel" aria-labelledby="tab-search">
+      <div class="search-box">
+        <label for="search-input" class="sr-only">搜索关键词</label>
+        <input type="search" id="search-input" class="search-input" placeholder="输入问题，如：事务隔离级别有哪些" autocomplete="off">
+        <button class="btn btn-primary" id="search-btn" type="button">搜索</button>
+      </div>
+      <div class="search-filters">
+        <label class="filter-label" for="filter-course">课程</label>
+        <select id="filter-course" class="filter-select">
+          <option value="">全部</option>
+        </select>
+        <label class="filter-label" for="filter-topic">主题</label>
+        <select id="filter-topic" class="filter-select">
+          <option value="">全部</option>
+        </select>
+        <label class="filter-label" for="filter-k">结果数</label>
+        <select id="filter-k" class="filter-select">
+          <option value="5">5</option>
+          <option value="8" selected>8</option>
+          <option value="12">12</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+      <div id="search-status" aria-live="polite"></div>
+      <div id="search-results"></div>
+      <div class="empty-state" id="search-empty">
+        <h3>开始检索</h3>
+        <p>输入自然语言问题，从笔记库中找到相关片段并追溯出处。</p>
+        <p>若资料库为空，请先前往「资料库」载入示例数据。</p>
+        <button class="btn btn-accent" id="seed-btn-search" type="button">载入示例数据</button>
+      </div>
+    </section>
+
+    <!-- ===== 资料库视图 ===== -->
+    <section class="view" id="view-library" role="tabpanel" aria-labelledby="tab-library">
+      <div class="stats-row" id="library-stats"></div>
+      <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-accent" id="seed-btn-library" type="button">载入示例数据</button>
+        <button class="btn btn-ghost" id="refresh-library" type="button">刷新列表</button>
+      </div>
+      <div class="library-grid">
+        <div class="card">
+          <h3 style="margin-bottom:12px;font-size:.95rem">导入笔记</h3>
+          <form id="import-form">
+            <div class="form-group">
+              <label for="imp-title">标题 *</label>
+              <input type="text" id="imp-title" required>
+            </div>
+            <div class="form-group">
+              <label for="imp-course">课程</label>
+              <input type="text" id="imp-course">
+            </div>
+            <div class="form-group">
+              <label for="imp-topic">主题</label>
+              <input type="text" id="imp-topic">
+            </div>
+            <div class="form-group">
+              <label for="imp-tags">标签（空格分隔）</label>
+              <input type="text" id="imp-tags">
+            </div>
+            <div class="form-group">
+              <label for="imp-source">来源</label>
+              <input type="text" id="imp-source">
+            </div>
+            <div class="form-group">
+              <label for="imp-content">正文 *</label>
+              <textarea id="imp-content" required placeholder="支持 Markdown 格式"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width:100%">导入</button>
+          </form>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+            <h3 style="font-size:.95rem">笔记列表</h3>
+            <select id="lib-filter-course" class="filter-select" style="min-width:100px">
+              <option value="">全部课程</option>
+            </select>
+          </div>
+          <div id="note-list-wrap">
+            <ul class="note-list" id="note-list"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 复习视图 ===== -->
+    <section class="view" id="view-review" role="tabpanel" aria-labelledby="tab-review">
+      <div class="review-progress" id="review-progress" aria-live="polite"></div>
+      <div id="review-area"></div>
+      <div class="empty-state" id="review-empty" style="display:none">
+        <h3>暂无待复习内容</h3>
+        <p>在检索结果中点击「加入复习」按钮，即可将片段添加到复习队列。</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== 技术面板 ===== -->
+  <aside class="tech-panel collapsed" id="tech-panel" aria-label="技术面板">
+    <button class="tech-panel-toggle" id="tech-toggle" type="button" aria-expanded="false">
+      <span>▲</span> 技术面板 · seekdb 状态与检索日志
+    </button>
+    <div class="tech-panel-body">
+      <div class="tech-section" id="tech-health">
+        <h4>系统状态</h4>
+        <div class="loading"><span class="spinner"></span> 加载中…</div>
+      </div>
+      <div class="tech-section" id="tech-stats">
+        <h4>Collection 统计</h4>
+        <div class="loading"><span class="spinner"></span> 加载中…</div>
+      </div>
+      <div class="tech-section" id="tech-logs">
+        <h4>最近检索日志</h4>
+        <div class="loading"><span class="spinner"></span> 加载中…</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

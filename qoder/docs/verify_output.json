@@ -1,0 +1,727 @@
+{
+  "generated_at": "2026-10-28T04:14:55+0800",
+  "health": {
+    "status": "ok",
+    "seekdb": {
+      "connected": true,
+      "database": "citeseek",
+      "collection": "citeseek_chunks_v1",
+      "count": 62
+    },
+    "embed": {
+      "mode": "onnx",
+      "model": "BAAI/bge-small-zh-v1.5",
+      "dim": 512,
+      "degraded": false
+    },
+    "version": "0.1.0"
+  },
+  "stats_baseline": {
+    "notes": 27,
+    "chunks": 62,
+    "review_items": 0,
+    "review_due": 0,
+    "searches": 0,
+    "avg_latency_ms": 0,
+    "top_queries": [],
+    "last_search_at": null
+  },
+  "sample1": {
+    "1.1": {
+      "query": "事务隔离级别有哪些",
+      "took_ms": 363,
+      "debug": {
+        "degraded": false,
+        "used_vector": true,
+        "used_fulltext": true,
+        "knn_hits": 5,
+        "fulltext_hits": 5
+      },
+      "results": [
+        {
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 2,
+          "score": 0.016393,
+          "distance": 0.0325,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "e8baed001d5b4dce8f5505605d8b050b",
+          "text": "离级别\n事务隔离级别其实由「MVCC 的可见性判断 + 锁」共同实现，这篇只整理 MVCC 这一半。\n\n- RC：每条 SELECT 重建 Read View，能读到别人已提交的新数据。\n- RR：事务内复用同一个 Read View，于是可重复读。\n- MVCC 只解决读不加锁，写写冲突仍然靠锁。老师说不要把「隔离级"
+        },
+        {
+          "title": "事务隔离级别与 MVCC",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 1,
+          "score": 0.016129,
+          "distance": 0.0317,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "064d8d1029d84a3894cc1c448690738b",
+          "text": "C；MySQL InnoDB 默认 RR。\n- 级别越高，并发度越低，选型是在正确性和吞吐之间折中。\n\n## 快照读和当前读\n- 快照读：普通 `SELECT`，走 MVCC，不加锁，看到事务快照（Read View）。\n- 当前读：`SELECT ... FOR UPDATE`、`UPDATE`、`DELETE`，读"
+        },
+        {
+          "title": "锁、两段锁协议与死锁排查",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 1,
+          "score": 0.015873,
+          "distance": 0.0315,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "ec42797307984b7e9620343473d85b2f",
+          "text": "放不加锁。\n- 2PL 保证冲突可串行化，但可能死锁；严格 2PL 把释放推迟到提交，避免级联回滚。\n\n## 死锁\n- 四个条件：互斥、持有并等待、不可剥夺、循环等待。\n- 检测：构造 wait-for graph，发现环就回滚代价小的事务（`innodb_deadlock_detect`）。\n- 避免：事务内按固定顺"
+        },
+        {
+          "title": "事务隔离级别与 MVCC",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 0,
+          "score": 0.015625,
+          "distance": 0.0315,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "ee26362bc91d4c938b3e264827ac60a5",
+          "text": "## 四种隔离级别\nSQL 标准定义了四种隔离级别，本质是「事务之间可见性的约定」，不是锁的多少：\n\n| 级别 | 脏读 | 不可重复读 | 幻读 |\n|---|---|---|---|\n| 读未提交 RU | 可能 | 可能 | 可能 |\n| 读已提交 RC | 不会 | 可能 | 可能 |\n| 可重复读 RR | "
+        },
+        {
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 1,
+          "score": 0.015385,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "34f3fe37f890415c89d3241898f19baa",
+          "text": "id 集合）、`min_trx_id`、`max_trx_id`、`creator_trx_id`。\n\n对一个版本 `trx_id = t`：\n1. `t == creator_trx_id` → 可见；\n2. `t < min_trx_id` → 可见；\n3. `t >= max_trx_id` → 不可见；\n4. "
+        }
+      ]
+    },
+    "1.2": {
+      "query": "并发事务之间的可见性怎么保证",
+      "took_ms": 48,
+      "debug": {
+        "degraded": false,
+        "used_vector": true,
+        "used_fulltext": true,
+        "knn_hits": 5,
+        "fulltext_hits": 5
+      },
+      "results": [
+        {
+          "title": "事务隔离级别与 MVCC",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 1,
+          "score": 0.016393,
+          "distance": 0.032,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "064d8d1029d84a3894cc1c448690738b",
+          "text": "C；MySQL InnoDB 默认 RR。\n- 级别越高，并发度越低，选型是在正确性和吞吐之间折中。\n\n## 快照读和当前读\n- 快照读：普通 `SELECT`，走 MVCC，不加锁，看到事务快照（Read View）。\n- 当前读：`SELECT ... FOR UPDATE`、`UPDATE`、`DELETE`，读"
+        },
+        {
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 2,
+          "score": 0.016129,
+          "distance": 0.032,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "e8baed001d5b4dce8f5505605d8b050b",
+          "text": "离级别\n事务隔离级别其实由「MVCC 的可见性判断 + 锁」共同实现，这篇只整理 MVCC 这一半。\n\n- RC：每条 SELECT 重建 Read View，能读到别人已提交的新数据。\n- RR：事务内复用同一个 Read View，于是可重复读。\n- MVCC 只解决读不加锁，写写冲突仍然靠锁。老师说不要把「隔离级"
+        },
+        {
+          "title": "事务隔离级别与 MVCC",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 0,
+          "score": 0.015873,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "ee26362bc91d4c938b3e264827ac60a5",
+          "text": "## 四种隔离级别\nSQL 标准定义了四种隔离级别，本质是「事务之间可见性的约定」，不是锁的多少：\n\n| 级别 | 脏读 | 不可重复读 | 幻读 |\n|---|---|---|---|\n| 读未提交 RU | 可能 | 可能 | 可能 |\n| 读已提交 RC | 不会 | 可能 | 可能 |\n| 可重复读 RR | "
+        },
+        {
+          "title": "混合检索与 RRF 融合排序",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 0,
+          "score": 0.015625,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "3fbc352cbde04af9af4c56b99f5b4dfd",
+          "text": "## 为什么不能只靠一种检索\n- 纯向量：同义表达召回好，但容易把「意思相近、事实不对」的段落排前面。\n- 纯全文：关键词精确，但对「隔离级别」和「并发可见性」这类换说法无能为力。\n- 结构化过滤只能缩小范围，不能排序。\n\n## RRF\nReciprocal Rank Fusion 只看名次、不看分数，天然规避两路分数"
+        },
+        {
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 1,
+          "score": 0.015385,
+          "distance": 0.0306,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "34f3fe37f890415c89d3241898f19baa",
+          "text": "id 集合）、`min_trx_id`、`max_trx_id`、`creator_trx_id`。\n\n对一个版本 `trx_id = t`：\n1. `t == creator_trx_id` → 可见；\n2. `t < min_trx_id` → 可见；\n3. `t >= max_trx_id` → 不可见；\n4. "
+        }
+      ]
+    }
+  },
+  "sample2": {
+    "2.1": {
+      "query": "索引",
+      "took_ms": 43,
+      "debug": {
+        "degraded": false,
+        "used_vector": true,
+        "used_fulltext": true,
+        "knn_hits": 10,
+        "fulltext_hits": 8
+      },
+      "results": [
+        {
+          "title": "B+ 树索引与回表",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 1,
+          "score": 0.016393,
+          "distance": 0.0325,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "37c111d85cad4af59fec81abb7a9c64e",
+          "text": "覆盖索引：查询列都在二级索引里，不需要回表，`EXPLAIN` 里显示 `Using index`。\n\n## 实践\n- 最左前缀：联合索引 (a, b, c) 能命中 a、a+b、a+b+c，不能命中 b+c。\n- 索引列上做函数或隐式类型转换会失效，例如 `where id = '123'` 同时比较字符串和数字。\n"
+        },
+        {
+          "title": "EXPLAIN 与慢查询排查",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 2,
+          "score": 0.016129,
+          "distance": 0.0318,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "41777b862a9c43c8af077f45792cd98b",
+          "text": "## 一次真实排查\n```sql\nSELECT * FROM notes\nWHERE course = '数据库系统' AND title LIKE '%索引%'\nORDER BY created_at DESC LIMIT 20;\n```\n- 最初在 course 和 title 上各建单列索引，`Extra` 出现"
+        },
+        {
+          "title": "EXPLAIN 与慢查询排查",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 0,
+          "score": 0.015873,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "d013409fea984d6e9765946d44f7f9d4",
+          "text": "## 看哪几列\n`EXPLAIN SELECT ...` 重点看：\n- `type`：`const > eq_ref > ref > range > index > ALL`，出现 `ALL` 就是扫全表。\n- `key`：实际用的索引，`NULL` 表示没走索引。\n- `rows`：预估扫描行数，和实际差太多说明统计"
+        },
+        {
+          "title": "B+ 树索引与回表",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 0,
+          "score": 0.015625,
+          "distance": 0.0303,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "c3d2a928906740a8ab3e1d8f8bd6f93b",
+          "text": "## 为什么是 B+ 树\n- 页大小 16KB，三层 B+ 树能存约千万级行，一次查找只需 3 次磁盘 IO。\n- 非叶子节点只存键和指针，扇出大、树高低；叶子节点用双向链表串起来，范围查询友好。\n- 对比 B 树：B 树非叶子节点也存数据，扇出小；B+ 树数据全在叶子，查询路径长度稳定。\n\n## 聚簇索引和二级索引\n"
+        },
+        {
+          "title": "检索增强生成 RAG 阅读笔记",
+          "course": "机器学习",
+          "topic": "检索与生成",
+          "seq": 0,
+          "score": 0.015385,
+          "distance": 0.0301,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "0e534bc55cf942cd9fe158888c762e78",
+          "text": "## 流水线\n1. 切块：按段落或语义边界切，块间留一点重叠，保证上下文不断裂。\n2. 建索引：用 embedding 模型把块编码成向量写入向量库，同时保留原文支持关键词检索。\n3. 检索：query 编码后取 top-k，常见做法是向量检索与全文检索混合，再用 RRF 融合。\n4. 重排与生成：用 reranker"
+        },
+        {
+          "title": "向量检索与 ANN 索引",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 2,
+          "score": 0.015152,
+          "distance": 0.0299,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "4390ee7bed9b4175bb86f615c04bfde7",
+          "text": "Search` 查询宽度。\n- 调大 efSearch 召回升高、延迟变高，要在两者之间扫一条曲线。\n\n## 和数据库的关系\n- 向量检索解决「换个说法也能搜到」，但对精确关键词、编号、专有名词不敏感。\n- 所以生产里常和倒排索引全文检索、结构化条件过滤组合，先各自召回再融合排序，也就是混合检索。\n- seekdb 把"
+        },
+        {
+          "title": "文献综述写作方法",
+          "course": "科研方法",
+          "topic": "文献工作",
+          "seq": 1,
+          "score": 0.014493,
+          "distance": 0.0156,
+          "matched_by": [
+            "vector"
+          ],
+          "chunk_id": "83578b98825c4bbfb6c996bfc7241fe5",
+          "text": "再顺着引用和被引扩展。\n- 边读边填表格：作者、年份、数据、方法、结论、局限；最后按方法或结论分组。\n\n## 写作结构\n1. 引言说明范围与选取标准；\n2. 按主题分节，每节先给结论再举证据；\n3. 放一张对比表；\n4. 指出研究空白（gap），自然引出自己的问题；\n5. 引用要回到原文，不转引二手总结。\n\n## 我的"
+        },
+        {
+          "title": "文献检索与筛选策略",
+          "course": "科研方法",
+          "topic": "文献工作",
+          "seq": 0,
+          "score": 0.014286,
+          "distance": 0.0152,
+          "matched_by": [
+            "vector"
+          ],
+          "chunk_id": "47c83f8f1c8e4b418c426871e1a082ea",
+          "text": "## 检索式怎么搭\n- 拆概念：每个概念一组词，组内 OR、组间 AND。\n- 例：(vector retrieval OR embedding search OR dense retrieval) AND (hybrid OR fusion)。\n- 上位词放宽、下位词收紧；先用宽检索看规模，再逐步加限定（年份、方法、"
+        }
+      ]
+    },
+    "2.2": {
+      "query": "索引",
+      "took_ms": 65,
+      "debug": {
+        "degraded": false,
+        "used_vector": true,
+        "used_fulltext": true,
+        "knn_hits": 10,
+        "fulltext_hits": 7
+      },
+      "results": [
+        {
+          "title": "B+ 树索引与回表",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 1,
+          "score": 0.016393,
+          "distance": 0.0325,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "37c111d85cad4af59fec81abb7a9c64e",
+          "text": "覆盖索引：查询列都在二级索引里，不需要回表，`EXPLAIN` 里显示 `Using index`。\n\n## 实践\n- 最左前缀：联合索引 (a, b, c) 能命中 a、a+b、a+b+c，不能命中 b+c。\n- 索引列上做函数或隐式类型转换会失效，例如 `where id = '123'` 同时比较字符串和数字。\n"
+        },
+        {
+          "title": "EXPLAIN 与慢查询排查",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 2,
+          "score": 0.016129,
+          "distance": 0.0318,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "41777b862a9c43c8af077f45792cd98b",
+          "text": "## 一次真实排查\n```sql\nSELECT * FROM notes\nWHERE course = '数据库系统' AND title LIKE '%索引%'\nORDER BY created_at DESC LIMIT 20;\n```\n- 最初在 course 和 title 上各建单列索引，`Extra` 出现"
+        },
+        {
+          "title": "B+ 树索引与回表",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 0,
+          "score": 0.015873,
+          "distance": 0.0315,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "c3d2a928906740a8ab3e1d8f8bd6f93b",
+          "text": "## 为什么是 B+ 树\n- 页大小 16KB，三层 B+ 树能存约千万级行，一次查找只需 3 次磁盘 IO。\n- 非叶子节点只存键和指针，扇出大、树高低；叶子节点用双向链表串起来，范围查询友好。\n- 对比 B 树：B 树非叶子节点也存数据，扇出小；B+ 树数据全在叶子，查询路径长度稳定。\n\n## 聚簇索引和二级索引\n"
+        },
+        {
+          "title": "EXPLAIN 与慢查询排查",
+          "course": "数据库系统",
+          "topic": "索引与存储",
+          "seq": 0,
+          "score": 0.015625,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "d013409fea984d6e9765946d44f7f9d4",
+          "text": "## 看哪几列\n`EXPLAIN SELECT ...` 重点看：\n- `type`：`const > eq_ref > ref > range > index > ALL`，出现 `ALL` 就是扫全表。\n- `key`：实际用的索引，`NULL` 表示没走索引。\n- `rows`：预估扫描行数，和实际差太多说明统计"
+        },
+        {
+          "title": "向量检索与 ANN 索引",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 2,
+          "score": 0.015152,
+          "distance": 0.0306,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "4390ee7bed9b4175bb86f615c04bfde7",
+          "text": "Search` 查询宽度。\n- 调大 efSearch 召回升高、延迟变高，要在两者之间扫一条曲线。\n\n## 和数据库的关系\n- 向量检索解决「换个说法也能搜到」，但对精确关键词、编号、专有名词不敏感。\n- 所以生产里常和倒排索引全文检索、结构化条件过滤组合，先各自召回再融合排序，也就是混合检索。\n- seekdb 把"
+        },
+        {
+          "title": "混合检索与 RRF 融合排序",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 2,
+          "score": 0.014706,
+          "distance": 0.0147,
+          "matched_by": [
+            "vector"
+          ],
+          "chunk_id": "bbb50c66a49346f4aa3c8846c52e1453",
+          "text": "\"where\": ...}, rank={\"rrf\": {...}}, n_results=k)`\n\n- 向量一路、全文一路各自召回，引擎内做 RRF，再按元数据 where 过滤。\n- 若引擎版本不支持 hybrid_search，就降级为两路分别查、应用层合并，并在响应 `debug.degraded` 里标记。"
+        },
+        {
+          "title": "混合检索与 RRF 融合排序",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 0,
+          "score": 0.014493,
+          "distance": 0.0145,
+          "matched_by": [
+            "vector"
+          ],
+          "chunk_id": "3fbc352cbde04af9af4c56b99f5b4dfd",
+          "text": "## 为什么不能只靠一种检索\n- 纯向量：同义表达召回好，但容易把「意思相近、事实不对」的段落排前面。\n- 纯全文：关键词精确，但对「隔离级别」和「并发可见性」这类换说法无能为力。\n- 结构化过滤只能缩小范围，不能排序。\n\n## RRF\nReciprocal Rank Fusion 只看名次、不看分数，天然规避两路分数"
+        },
+        {
+          "title": "向量检索与 ANN 索引",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 0,
+          "score": 0.014286,
+          "distance": 0.0143,
+          "matched_by": [
+            "vector"
+          ],
+          "chunk_id": "4589668bb6434aaf85e73dba04c046de",
+          "text": "## 基本概念\n- 向量检索：把文本用 embedding 模型编码成稠密向量，按相似度返回最近邻。\n- 常用度量：余弦相似度、内积、L2 距离；向量归一化后余弦和内积等价。\n- 512 维时暴力检索是 O(N·d)，十万条也要几十到几百毫秒，数据量再大就不够用。"
+        }
+      ]
+    },
+    "2.3": {
+      "query": "检索",
+      "took_ms": 174,
+      "debug": {
+        "degraded": false,
+        "used_vector": true,
+        "used_fulltext": true,
+        "knn_hits": 6,
+        "fulltext_hits": 4
+      },
+      "results": [
+        {
+          "title": "向量检索与 ANN 索引",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 2,
+          "score": 0.016393,
+          "distance": 0.0328,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "4390ee7bed9b4175bb86f615c04bfde7",
+          "text": "Search` 查询宽度。\n- 调大 efSearch 召回升高、延迟变高，要在两者之间扫一条曲线。\n\n## 和数据库的关系\n- 向量检索解决「换个说法也能搜到」，但对精确关键词、编号、专有名词不敏感。\n- 所以生产里常和倒排索引全文检索、结构化条件过滤组合，先各自召回再融合排序，也就是混合检索。\n- seekdb 把"
+        },
+        {
+          "title": "向量检索与 ANN 索引",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 0,
+          "score": 0.016129,
+          "distance": 0.0323,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "4589668bb6434aaf85e73dba04c046de",
+          "text": "## 基本概念\n- 向量检索：把文本用 embedding 模型编码成稠密向量，按相似度返回最近邻。\n- 常用度量：余弦相似度、内积、L2 距离；向量归一化后余弦和内积等价。\n- 512 维时暴力检索是 O(N·d)，十万条也要几十到几百毫秒，数据量再大就不够用。"
+        },
+        {
+          "title": "混合检索与 RRF 融合排序",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 0,
+          "score": 0.015873,
+          "distance": 0.0317,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "3fbc352cbde04af9af4c56b99f5b4dfd",
+          "text": "## 为什么不能只靠一种检索\n- 纯向量：同义表达召回好，但容易把「意思相近、事实不对」的段落排前面。\n- 纯全文：关键词精确，但对「隔离级别」和「并发可见性」这类换说法无能为力。\n- 结构化过滤只能缩小范围，不能排序。\n\n## RRF\nReciprocal Rank Fusion 只看名次、不看分数，天然规避两路分数"
+        },
+        {
+          "title": "混合检索与 RRF 融合排序",
+          "course": "数据库系统",
+          "topic": "检索系统",
+          "seq": 2,
+          "score": 0.015385,
+          "distance": 0.0156,
+          "matched_by": [
+            "vector"
+          ],
+          "chunk_id": "bbb50c66a49346f4aa3c8846c52e1453",
+          "text": "\"where\": ...}, rank={\"rrf\": {...}}, n_results=k)`\n\n- 向量一路、全文一路各自召回，引擎内做 RRF，再按元数据 where 过滤。\n- 若引擎版本不支持 hybrid_search，就降级为两路分别查、应用层合并，并在响应 `debug.degraded` 里标记。"
+        }
+      ]
+    }
+  },
+  "sample3": {
+    "due_before": {
+      "total": 0,
+      "items": []
+    },
+    "stats_before": {
+      "notes": 27,
+      "chunks": 62,
+      "review_items": 0,
+      "review_due": 0,
+      "searches": 5,
+      "avg_latency_ms": 138.6,
+      "top_queries": [
+        {
+          "query": "索引",
+          "count": 2
+        },
+        {
+          "query": "事务隔离级别有哪些",
+          "count": 1
+        },
+        {
+          "query": "并发事务之间的可见性怎么保证",
+          "count": 1
+        },
+        {
+          "query": "检索",
+          "count": 1
+        }
+      ],
+      "last_search_at": "2026-10-28T04:14:58"
+    },
+    "add": {
+      "ok": true,
+      "due_at": "2026-10-28T04:14:57.628353"
+    },
+    "due_after_add": {
+      "total": 1,
+      "items": [
+        {
+          "chunk_id": "e8baed001d5b4dce8f5505605d8b050b",
+          "note_id": "63c7ecd8f7054c11b8c0a89ecb82b304",
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "due_at": "2026-10-28T04:14:58",
+          "reps": 0,
+          "interval_days": 0,
+          "ease": 2.5,
+          "lapses": 0,
+          "text": "离级别\n事务隔离级别其实由「MVCC 的可见性判断 + 锁」共同实现，这篇只整理 MVCC 这一半。\n\n- RC：每条 SELECT 重建 Read View，能读到别人已提交的新数据。\n- RR：事务内复用同一个 Read View，于是可重复读。\n- MVCC 只解决读不加锁，写写冲突仍然靠锁。老师说不要把「隔离级别」和「MVCC」当成同一个东西背。"
+        }
+      ]
+    },
+    "answer": {
+      "ok": true,
+      "interval_days": 1,
+      "ease": 2.52,
+      "due_at": "2026-10-29T04:15:01.687811",
+      "reps": 1
+    },
+    "due_after_answer": {
+      "total": 0,
+      "items": []
+    },
+    "stats_after": {
+      "notes": 27,
+      "chunks": 62,
+      "review_items": 1,
+      "review_due": 0,
+      "searches": 5,
+      "avg_latency_ms": 138.6,
+      "top_queries": [
+        {
+          "query": "索引",
+          "count": 2
+        },
+        {
+          "query": "事务隔离级别有哪些",
+          "count": 1
+        },
+        {
+          "query": "并发事务之间的可见性怎么保证",
+          "count": 1
+        },
+        {
+          "query": "检索",
+          "count": 1
+        }
+      ],
+      "last_search_at": "2026-10-28T04:14:58"
+    }
+  },
+  "logs": {
+    "items": [
+      {
+        "query": "检索",
+        "mode": "hybrid",
+        "took_ms": 174,
+        "result_count": 4,
+        "used_vector": 1,
+        "used_fulltext": 1,
+        "created_at": "2026-10-28T04:14:58"
+      },
+      {
+        "query": "索引",
+        "mode": "hybrid",
+        "took_ms": 65,
+        "result_count": 8,
+        "used_vector": 1,
+        "used_fulltext": 1,
+        "created_at": "2026-10-28T04:14:58"
+      },
+      {
+        "query": "索引",
+        "mode": "hybrid",
+        "took_ms": 43,
+        "result_count": 8,
+        "used_vector": 1,
+        "used_fulltext": 1,
+        "created_at": "2026-10-28T04:14:57"
+      },
+      {
+        "query": "并发事务之间的可见性怎么保证",
+        "mode": "hybrid",
+        "took_ms": 48,
+        "result_count": 5,
+        "used_vector": 1,
+        "used_fulltext": 1,
+        "created_at": "2026-10-28T04:14:57"
+      },
+      {
+        "query": "事务隔离级别有哪些",
+        "mode": "hybrid",
+        "took_ms": 363,
+        "result_count": 5,
+        "used_vector": 1,
+        "used_fulltext": 1,
+        "created_at": "2026-10-28T04:14:56"
+      }
+    ]
+  },
+  "hash_mode": {
+    "health": {
+      "status": "ok",
+      "seekdb": {
+        "connected": true,
+        "database": "citeseek_hash",
+        "collection": "citeseek_chunks_v1",
+        "count": 62
+      },
+      "embed": {
+        "mode": "hash",
+        "model": "hash-ngram",
+        "dim": 512,
+        "degraded": false
+      },
+      "version": "0.1.0"
+    },
+    "rephrase": {
+      "query": "并发事务之间的可见性怎么保证",
+      "took_ms": 36,
+      "debug": {
+        "degraded": false,
+        "used_vector": true,
+        "used_fulltext": true,
+        "knn_hits": 3,
+        "fulltext_hits": 3
+      },
+      "results": [
+        {
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 2,
+          "score": 0.016393,
+          "distance": 0.0325,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "5560223ca8aa4ffab6dbfa5c49208216",
+          "text": "离级别\n事务隔离级别其实由「MVCC 的可见性判断 + 锁」共同实现，这篇只整理 MVCC 这一半。\n\n- RC：每条 SELECT 重建 Read View，能读到别人已提交的新数据。\n- RR：事务内复用同一个 Read View，于是可重复读。\n- MVCC 只解决读不加锁，写写冲突仍然靠锁。老师说不要把「隔离级"
+        },
+        {
+          "title": "事务隔离级别与 MVCC",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 0,
+          "score": 0.016129,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "a9c088a9752f4a518bc7cdd2455f31a2",
+          "text": "## 四种隔离级别\nSQL 标准定义了四种隔离级别，本质是「事务之间可见性的约定」，不是锁的多少：\n\n| 级别 | 脏读 | 不可重复读 | 幻读 |\n|---|---|---|---|\n| 读未提交 RU | 可能 | 可能 | 可能 |\n| 读已提交 RC | 不会 | 可能 | 可能 |\n| 可重复读 RR | "
+        },
+        {
+          "title": "MVCC 版本链与 Read View",
+          "course": "数据库系统",
+          "topic": "事务与并发",
+          "seq": 0,
+          "score": 0.015873,
+          "distance": 0.0313,
+          "matched_by": [
+            "vector",
+            "fulltext"
+          ],
+          "chunk_id": "9347aa0018ed491a8deb3829b29fa8f7",
+          "text": "## 版本链\n- InnoDB 每行有隐藏字段 `DB_TRX_ID`（最近修改事务）和 `DB_ROLL_PTR`（回滚指针）。\n- 每次修改把旧值写进 undo log，`roll_ptr` 串成版本链，链头是最新版本。\n- purge 线程负责清理不再被任何 Read View 需要的旧版本。\n\n## Read "
+        }
+      ]
+    }
+  }
+}

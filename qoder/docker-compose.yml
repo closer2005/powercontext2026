@@ -1,0 +1,50 @@
+services:
+  seekdb:
+    image: oceanbase/seekdb:latest
+    ports:
+      - "2881:2881"
+      - "2886:2886"
+    volumes:
+      - seekdb_data:/var/lib/seekdb
+    healthcheck:
+      # mysqladmin may not exist in all seekdb images; tolerate failure with || exit 0
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -P2881 -uroot || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  citeseek:
+    build:
+      context: .
+      args:
+        # 国内网络可设为 https://mirrors.aliyun.com/pypi/simple/ 加速依赖安装
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple} 
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - SEEKDB_HOST=seekdb
+      - SEEKDB_PORT=2881
+      - SEEKDB_DATABASE=citeseek
+      - SEEKDB_USER=root
+      - SEEKDB_PASSWORD=
+      - EMBED_MODE=auto
+      - SEED_ON_START=1
+    depends_on:
+      seekdb:
+        condition: service_healthy
+    volumes:
+      - citeseek_model_cache:/root/.cache/citeseek
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  seekdb_data: {}
+  citeseek_model_cache: {}

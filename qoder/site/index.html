@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CiteSeek 知源 · 用 Qoder + seekdb 打造的笔记混合检索助手</title>
+<meta name="description" content="CiteSeek 知源：面向学生与科研工作者的可溯源笔记混合检索助手。笔记导入 seekdb，用自然语言找回片段并给出出处，配合间隔复习真正记住。OceanBase 2026 数据库大赛 Qoder 赛题参赛作品。">
+<meta name="theme-color" content="#0f766e">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CiteSeek 知源 · 用 Qoder + seekdb 打造的笔记混合检索助手">
+<meta property="og:description" content="用一句话找回笔记里的那句话，并告诉你它出自哪里。seekdb 向量 + 全文 + 结构化过滤，RRF 融合，检索即复习。">
+<meta property="og:locale" content="zh_CN">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="#top" aria-label="CiteSeek 知源 · 回到顶部">
+      <span class="brand-mark" aria-hidden="true">CS</span>CiteSeek 知源
+      <span class="brand-sub">可溯源笔记检索</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span aria-hidden="true">☰</span><span>菜单</span></button>
+    <ul class="nav-links" id="site-nav">
+      <li><a href="#problem">痛点</a></li>
+      <li><a href="#features">功能</a></li>
+      <li><a href="#demo">演示</a></li>
+      <li><a href="#tech">技术</a></li>
+      <li><a href="#evidence">证据</a></li>
+      <li><a href="#build">开发记录</a></li>
+      <li><a href="#run">运行</a></li>
+      <li><a class="nav-cta" href="https://github.com/closer2005/powercontext2026/tree/2026-competition-ecosystem/qoder" target="_blank" rel="noopener">代码仓库</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 1 · Hero / 项目简介 -->
+  <section class="hero" id="top">
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>2026 OceanBase 数据库大赛 · Qoder 赛题 参赛作品</span>
+        <h1>CiteSeek <span class="en">知源</span></h1>
+        <p class="lead"><strong>可溯源的笔记混合检索助手</strong>：用一句话找回笔记里的那句话，并告诉你它出自哪里。面向学生与科研工作者——把散落在 Markdown、论文摘录、课堂记录里的文字导入 seekdb，提问即得片段与出处，再用间隔复习真正记住。</p>
+        <div class="tag-row"><span class="tag">Qoder 开发</span><span class="tag is-accent">seekdb 混合检索</span><span class="tag">学习提效</span></div>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#demo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>查看演示</a>
+          <a class="btn btn-ghost" href="https://github.com/closer2005/powercontext2026/tree/2026-competition-ecosystem/qoder" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>代码仓库</a>
+        </div>
+        </div>
+      <figure class="shot"><img src="assets/demo-search.png" alt="检索视图：自然语言提问后返回带出处、命中来源与融合分数的片段"><figcaption>检索视图 · 真实运行截图（2026-10-28）</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 2 · 解决的问题 -->
+  <section class="section section-alt" id="problem">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Problem · 解决的问题</p>
+        <h2 class="section-title">要查的时候，笔记总是“记得有、找不到”</h2>
+        <p class="section-sub">痛点来自团队成员期末复习与写论文时的真实经历，不是假设出来的需求。</p>
+      </div>
+      <div class="grid-3">
+        <article class="card">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 8h5M8 12h8M8 16h6"/></svg></div>
+          <h3>记得讲过，却翻不到</h3>
+          <p>只记得“老师讲过某个概念”，翻遍十几个 Markdown / Word 文件，也找不到那句原话。</p>
+        </article>
+        <article class="card">
+          <div class="card-icon is-accent" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></div>
+          <h3>换个说法就搜不到</h3>
+          <p>关键词检索依赖原词，同义表达直接漏召回；纯向量检索又会召回“意思相近但事实不对”的片段。</p>
+        </article>
+        <article class="card">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M5 8h14M5 16h14"/></svg></div>
+          <h3>找到内容，却没有出处</h3>
+          <p>结果不给来源与导入时间，无法判断可信度；找到了也不会顺手复习，下次还得再找一遍。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · 核心功能 -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Features · 核心功能</p>
+        <h2 class="section-title">检索、沉淀、复习，一条链路走完</h2>
+        <p class="section-sub">四个功能都直接对应上面的痛点，并且全部围绕 seekdb 的检索能力展开。</p>
+      </div>
+      <div class="grid-4">
+        <article class="card">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></div>
+          <h3>混合检索与出处</h3>
+          <p>向量语义 + 全文关键词 + 课程 / 主题过滤在 seekdb 内一次完成，RRF 融合；每条结果都带资料名、课程与所在段落。</p>
+          <figure class="shot"><img src="assets/demo-search.png" alt="检索视图：自然语言提问后返回带出处、命中来源与融合分数的片段"><figcaption>检索视图 · 真实运行截图（2026-10-28）</figcaption></figure>
+        </article>
+        <article class="card">
+          <div class="card-icon is-accent" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16V4m-5 5 5-5 5 5M4 20h16"/></svg></div>
+          <h3>资料导入与分块</h3>
+          <p>粘贴文本或导入 Markdown / TXT，按段落与句子切块并保留重叠，逐块写入 collection；按标题判重，重复载入不出脏数据。</p>
+          <figure class="shot"><img src="assets/demo-import.png" alt="资料库：导入笔记、载入示例数据与笔记列表"><figcaption>资料库视图 · 真实运行截图（2026-10-28）</figcaption></figure>
+        </article>
+        <article class="card">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <h3>检索即复习</h3>
+          <p>命中的片段一键加入复习清单，按简化 SM-2 算法安排到期时间；复习进度与间隔同样存在 seekdb 的业务表里。</p>
+          <figure class="shot"><img src="assets/demo-review.png" alt="复习视图：按 SM-2 间隔重复安排到期片段"><figcaption>复习视图 · 真实运行截图（2026-10-28）</figcaption></figure>
+        </article>
+        <article class="card">
+          <div class="card-icon is-accent" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <h3>技术证据面板</h3>
+          <p>持续展示 seekdb 连接状态、collection 统计与最近检索日志（query / 耗时 / 结果数 / 向量与全文命中），评审可直接核对。</p>
+          <figure class="shot"><img src="assets/demo-stats.png" alt="技术面板：seekdb 状态、collection 统计与最近检索日志"><figcaption>技术证据面板 · 真实运行截图（2026-10-28）</figcaption></figure>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · 演示 -->
+  <section class="section section-alt" id="demo">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Demo · 演示</p>
+        <h2 class="section-title">输入一个问题，得到带出处的回答</h2>
+        <p class="section-sub">左侧是真实检索界面；右侧是同一次查询的真实返回内容（含出处、命中来源与耗时）。</p>
+      </div>
+      <div class="demo-grid">
+        <figure class="shot"><img src="assets/demo-search.png" alt="检索视图：自然语言提问后返回带出处、命中来源与融合分数的片段"><figcaption>检索视图 · 真实运行截图（2026-10-28）</figcaption></figure>
+        <div class="demo-side">
+          <div class="chat">
+            <div class="chat-head"><strong>一次完整检索</strong><span>真实运行输出 · 2026-10-28</span></div>
+            <p class="chat-label" style="margin-top:16px">输入</p>
+            <p class="chat-q">事务隔离级别有哪些</p>
+            <p class="chat-label" style="margin-top:14px">返回</p>
+            <div class="chat-a">
+              <p>命中 5 个片段，Top-1 来自《MVCC 版本链与 Read View》：</p>
+              <p style="margin-top:8px">“<span class="hit">事务隔离级别</span>「MVCC 的可见性判断 + 锁」共同实现，这篇只整理 MVCC 这一半。RC 每条 SELECT 重建 Read View，能读到别人已提交的新数据；RR 事务内复用同一个 Read View，于是可重复读；MVCC 只解决读不加锁，写写冲突仍然靠锁。”</p>
+              <p style="margin-top:8px"><strong>出自</strong>：《MVCC 版本链与 Read View》· 第 3 段 · 课程「数据库系统」/ 主题「事务与并发」</p>
+            </div>
+            <div class="chat-meta"><span>耗时 115 ms</span><span>命中：vector + fulltext</span><span>RRF 融合</span></div>
+          </div>
+        </div>
+        <figure class="shot"><img src="assets/demo.gif" alt="界面流程动图：载入示例数据 → 混合检索 → 加入复习"><figcaption>界面流程动图 · 真实截图合成（非录屏）</figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · 技术架构 / seekdb 结合 -->
+  <section class="section" id="tech">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Under the hood · 技术架构</p>
+        <h2 class="section-title">seekdb 居中：三种检索能力，一次调用融合</h2>
+        <p class="section-sub">应用层只负责算向量与编排，召回与排序都在 seekdb 内完成；业务数据同样落在 seekdb（MySQL 协议）。</p>
+      </div>
+      <div class="grid-2" style="align-items:start">
+        <div class="arch">
+          <div class="arch-lanes">
+            <div class="arch-node"><h4>向量检索</h4><p>BGE-zh 512 维嵌入，cosine</p></div>
+            <div class="arch-node"><h4>全文检索</h4><p>query 关键词 $contains</p></div>
+            <div class="arch-node"><h4>结构化过滤</h4><p>course / topic / created_day</p></div>
+          </div>
+          <div class="arch-arrow" aria-hidden="true"></div>
+          <div class="arch-core"><h4>seekdb collection · citeseek_chunks_v1</h4><p>hybrid_search 一次下发两类查询，RRF 融合后返回 top-k 片段</p><span class="arch-badge">RRF · rank_window_size 60</span></div>
+          <div class="arch-arrow" aria-hidden="true"></div>
+          <div class="arch-row">
+            <div class="arch-node"><h4>FastAPI 服务层</h4><p>pymysql / pyseekdb 读写</p></div>
+            <div class="arch-node"><h4>前端页面</h4><p>原生 HTML/CSS/JS，由 FastAPI 托管</p></div>
+          </div>
+        </div>
+        <div>
+          <article class="card">
+            <h3>RRF 融合是怎么走的</h3>
+            <ul>
+              <li>查询向量由 <code class="cmd-inline">bge-small-zh-v1.5</code> 计算：查询侧加检索前缀，入库文档不加。</li>
+              <li>同一请求携带向量、关键词与 where 过滤条件，交给 <code class="cmd-inline">hybrid_search</code>。</li>
+              <li>向量路与全文路各自召回后按 RRF 融合（rank_constant 60），取 top-k。</li>
+              <li>结果补全出处字段，同时写入 <code class="cmd-inline">search_log</code> 供技术证据展示。</li>
+            </ul>
+          </article>
+          <article class="card" style="margin-top:18px">
+            <h3>embedding 与降级策略</h3>
+            <p><code class="cmd-inline">EMBED_MODE=auto</code> 优先本地 ONNX 推理；模型不可用时退化为 512 维字符 n-gram 哈希向量，接口返回 <code class="cmd-inline">embed.degraded=true</code>。若引擎不支持 hybrid_search，则在应用层分别取向量与全文结果再做 RRF，并在响应中标记降级，检索链路不中断。</p>
+          </article>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-top:22px">
+        <article class="card"><h3>职责一 · 向量召回</h3><p>chunk 文本与 metadata 存入 <code class="cmd-inline">citeseek_chunks_v1</code>；语义相近但用词不同的片段靠向量路召回。</p></article>
+        <article class="card"><h3>职责二 · 全文召回</h3><p>query 原词通过 <code class="cmd-inline">$contains</code> 参与全文匹配，保证术语、公式名、专有名词这类精确命中不被语义路稀释。</p></article>
+        <article class="card"><h3>职责三 · 结构化存储</h3><p>notes、review_items、search_log 三张表通过 MySQL 协议写在 seekdb 中，复习进度与检索日志可用 SQL 直接核对。</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · 技术证据 -->
+  <section class="section section-alt" id="evidence">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Evidence · 技术证据</p>
+        <h2 class="section-title">可核对的检索日志与 collection 统计</h2>
+        <p class="section-sub">下列数字与日志来自 2026-10-28 本地真实运行（notes 27 / chunks 62，最近 7 次查询均值 71.1 ms），可按本节末尾命令复核。</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><p class="stat-value">1</p><p class="stat-label">collection</p><p class="stat-hint">citeseek_chunks_v1 · 512 维 · HNSW cosine</p></div>
+        <div class="stat"><p class="stat-value">27</p><p class="stat-label">notes</p><p class="stat-hint">data/samples 示例笔记</p></div>
+        <div class="stat"><p class="stat-value">62</p><p class="stat-label">chunks</p><p class="stat-hint">平均每篇约 2.3 段</p></div>
+        <div class="stat"><p class="stat-value">71 ms</p><p class="stat-label">平均检索耗时</p><p class="stat-hint">最近 7 次查询均值</p></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head"><h3>最近检索日志</h3><p class="table-note">真实运行记录（2026-10-28）· 可调用 <code class="cmd-inline">GET /api/logs/search</code> 复核</p></div>
+        <div class="table-scroll">
+          <table>
+            <caption class="sr-only">最近检索日志示例：query、模式、耗时、结果数与命中来源</caption>
+            <thead><tr><th scope="col">时间</th><th scope="col">query</th><th scope="col">模式</th><th scope="col">耗时</th><th scope="col">结果数</th><th scope="col">命中来源</th></tr></thead>
+            <tbody>
+              
+              <tr><td class="num">03:59:40</td><td>向量检索和全文检索怎么结合</td><td><span class="badge badge-m">hybrid</span></td><td class="num">65 ms</td><td class="num">4</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">03:59:40</td><td>事务隔离级别有哪些</td><td><span class="badge badge-m">hybrid</span></td><td class="num">62 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">03:59:40</td><td>贝叶斯公式在分类里怎么用</td><td><span class="badge badge-m">hybrid</span></td><td class="num">70 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">03:59:40</td><td>怎么避免模型过拟合</td><td><span class="badge badge-m">hybrid</span></td><td class="num">68 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">03:59:40</td><td>神经网络里的注意力机制</td><td><span class="badge badge-m">hybrid</span></td><td class="num">53 ms</td><td class="num">4</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+            
+              </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="code-title" style="margin-top:22px">在本地核对同一份证据</p>
+      <pre class="code"><code>curl -s http://localhost:8000/api/logs/search?limit=5
+curl -s http://localhost:8000/api/stats
+<span class="c-dim"># seekdb 走 MySQL 协议，结构化表可直接用 SQL 核对</span>
+mysql -h127.0.0.1 -P2881 -uroot citeseek \
+  -e "SELECT query, took_ms, result_count, used_vector, used_fulltext FROM search_log ORDER BY id DESC LIMIT 5;"</code></pre>
+    </div>
+  </section>
+
+  <!-- 7 · Qoder 开发记录 -->
+  <section class="section" id="build">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Build with Qoder · 开发记录</p>
+        <h2 class="section-title">从需求拆解到发布，Qoder 参与了全流程</h2>
+        <p class="section-sub">以下时间线对应 Qoder CN CLI 的两个真实开发会话（2026-10-28 03:14–03:51，共 104 次模型请求、60 Credits、23 个文件由 Qoder 创建），截图由会话日志自动抽取。</p>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <span class="tl-dot" aria-hidden="true"></span>
+          <div class="tl-card">
+            <p class="tl-meta"><span>阶段 01</span><span class="badge badge-v">需求拆解</span></p>
+            <h3>把评审要求拆成可验收的任务</h3>
+            <p>先把 11 项硬内容与 6 条验收标准拆成任务清单，再定数据模型与 API 契约；Qoder 负责把口头需求整理成设计文档，减少返工。</p>
+          </div>
+        </div>
+        <div class="tl-item is-accent">
+          <span class="tl-dot" aria-hidden="true"></span>
+          <div class="tl-card">
+            <p class="tl-meta"><span>阶段 02</span><span class="badge badge-f">数据层</span></p>
+            <h3>建 collection 与三张业务表</h3>
+            <p>Qoder 生成初始化代码：512 维 cosine 的 <code class="cmd-inline">citeseek_chunks_v1</code>，以及 notes / review_items / search_log；启动时重试等待 seekdb 就绪。</p>
+            <figure class="shot"><img src="assets/dev-record-1.png" alt="Qoder 会话 1 完整记录：需求、创建的文件、命令与自测输出"><figcaption>Qoder 会话 1 · 后端核心实现（日志自动抽取）</figcaption></figure>
+          </div>
+        </div>
+        <div class="tl-item">
+          <span class="tl-dot" aria-hidden="true"></span>
+          <div class="tl-card">
+            <p class="tl-meta"><span>阶段 03</span><span class="badge badge-v">检索 API</span></p>
+            <h3>一次调用完成混合检索</h3>
+            <p>实现 <code class="cmd-inline">POST /api/search</code>：查询向量、<code class="cmd-inline">$contains</code> 关键词与 where 过滤一次下发；结果带 matched_by 标记并写入 search_log。</p>
+            <figure class="shot"><img src="assets/dev-record-2.png" alt="Qoder 会话 2 完整记录：bug 修复、前端与部署配置"><figcaption>Qoder 会话 2 · 修复与前端（日志自动抽取）</figcaption></figure>
+          </div>
+        </div>
+        <div class="tl-item">
+          <span class="tl-dot" aria-hidden="true"></span>
+          <div class="tl-card">
+            <p class="tl-meta"><span>阶段 04</span><span class="badge badge-v">前端</span></p>
+            <h3>三视图 + 技术面板</h3>
+            <p>Qoder 直接产出原生 HTML/CSS/JS：检索、资料库、复习三个视图，关键词高亮与出处标签由前端完成，技术面板固定展示 seekdb 状态与日志。</p>
+          </div>
+        </div>
+        <div class="tl-item is-accent">
+          <span class="tl-dot" aria-hidden="true"></span>
+          <div class="tl-card">
+            <p class="tl-meta"><span>阶段 05</span><span class="badge badge-f">测试与修复</span></p>
+            <h3>用测试兜住易错点</h3>
+            <p>pytest 覆盖切块、嵌入（hash 模式）与 API 冒烟；定位并修复“导入后新数据查不到”——seekdb 向量索引异步构建，需在批量导入后显式刷新索引。</p>
+            <figure class="shot"><img src="assets/dev-record-3.png" alt="Qoder 开发记录总览：会话数、请求数、Credits 与文件数"><figcaption>Qoder 开发记录总览（账号 UID 见下）</figcaption></figure>
+          </div>
+        </div>
+        <div class="tl-item">
+          <span class="tl-dot" aria-hidden="true"></span>
+          <div class="tl-card">
+            <p class="tl-meta"><span>阶段 06</span><span class="badge badge-v">发布</span></p>
+            <h3>交付可复现的仓库</h3>
+            <p>补齐 Dockerfile、docker-compose 与运行 / 验证文档，按分支提交代码仓库，并用 Qoder Sites 托管本展示站。</p>
+          </div>
+        </div>
+      </div>
+      <div class="uid-box">
+        <p><strong>Qoder 账号</strong>：<code class="cmd-inline">nick1732629033</code>　<strong>UID</strong>：用于评审核对开发账号归属与站点所有权。</p>
+        <span class="uid-code">UID: 01a17ebb-b33f-7606-8a7e-d48daeafdadf</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · 运行说明 -->
+  <section class="section section-alt" id="run">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Run it · 运行说明</p>
+        <h2 class="section-title">Docker 一键启动，四步完成复现</h2>
+        <p class="section-sub">环境要求：Docker 24+ 与 Docker Compose v2。首次启动会拉取 seekdb 镜像并下载嵌入模型，请预留网络与磁盘。</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <div>
+            <h3>克隆仓库并进入项目目录</h3>
+            <pre class="code"><code>git clone https://github.com/closer2005/powercontext2026.git
+cd powercontext2026/qoder</code></pre>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <div>
+            <h3>启动服务</h3>
+            <pre class="code"><code>docker compose up -d --build</code></pre>
+            <p class="step-out">预期：seekdb 健康检查通过后，citeseek 开始建表并初始化 collection，首次约 1–3 分钟。</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <div>
+            <h3>打开体验入口</h3>
+            <p>浏览器访问 <a href="http://localhost:8000" target="_blank" rel="noopener">http://localhost:8000</a>（本地运行地址，仅本机可访问）。</p>
+            <p class="step-out">预期：页面显示 seekdb <strong>已连接</strong>，embed.dim = 512。</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">4</span>
+          <div>
+            <h3>载入示例数据</h3>
+            <p>点击页面「载入示例数据」，或执行下面命令（幂等，可重复执行）。</p>
+            <pre class="code"><code>curl -X POST http://localhost:8000/api/import/samples</code></pre>
+            <p class="step-out">预期：notes ≥ 20、chunks ≥ 60。</p>
+          </div>
+        </div>
+      </div>
+      <p class="step-out" style="margin-top:20px">自检：<code class="cmd-inline">curl http://localhost:8000/api/health</code> 应返回 status ok、seekdb.connected true；无外网可用 <code class="cmd-inline">EMBED_MODE=hash</code> 启动，停止服务用 <code class="cmd-inline">docker compose down</code>。</p>
+    </div>
+  </section>
+
+  <!-- 9 · 验证样例 -->
+  <section class="section" id="verify">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Verify · 验证样例</p>
+        <h2 class="section-title">初始数据 → 输入 → 预期结果 → seekdb 证据</h2>
+        <p class="section-sub">与仓库 <code class="cmd-inline">docs/VERIFY.md</code> 一致，可在本地逐条复现。</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <div>
+            <h3>确认初始数据</h3>
+            <pre class="code"><code>curl -s http://localhost:8000/api/stats</code></pre>
+            <p class="step-out">预期：<strong>notes = 24</strong>、<strong>chunks = 96</strong>（示例数据规模，以实际返回为准）。</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <div>
+            <h3>提交一次混合检索</h3>
+            <pre class="code"><code>curl -s -X POST http://localhost:8000/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"事务隔离级别","k":5}'</code></pre>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <div>
+            <h3>预期结果</h3>
+            <p>返回包含《数据库系统概论 · 第 7 章》相关片段；<code class="cmd-inline">matched_by</code> 同时含 vector 与 fulltext，<code class="cmd-inline">took_ms</code> 有值，每条结果都带 title 与 seq（第 N 段）。</p>
+            <p class="step-out">若结果为空：先确认已载入示例数据，再放宽课程 / 主题筛选或换用同义说法。</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">4</span>
+          <div>
+            <h3>seekdb 侧证据</h3>
+            <p>同一次查询会在 <code class="cmd-inline">search_log</code> 新增一行（used_vector=1、used_fulltext=1），collection 条目数不变；记录可在本页「技术证据」区或 <code class="cmd-inline">GET /api/logs/search</code> 看到。</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">5</span>
+          <div>
+            <h3>复习闭环（可选）</h3>
+            <p>点击结果上的「加入复习」后，<code class="cmd-inline">GET /api/review/due</code> 能取到该片段；评分后 due_at 被推后，reps 与 interval_days 相应变化。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- 10 · 页脚：参赛信息与材料说明 -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-brand"><span class="brand-mark" aria-hidden="true">CS</span>CiteSeek 知源</p>
+        <p style="margin-top:12px">2026 OceanBase 数据库大赛 · Qoder 赛题（题目 600078）参赛作品。</p>
+        <p style="margin-top:8px">基于 seekdb 的向量检索 + 全文检索 + 结构化过滤，经 RRF 融合返回带出处的学习片段。</p>
+      </div>
+      <div>
+        <h3>项目资源</h3>
+        <ul class="footer-links">
+          <li><a href="https://github.com/closer2005/powercontext2026/tree/2026-competition-ecosystem/qoder" target="_blank" rel="noopener">代码仓库（GitHub）</a></li>
+          <li><a href="http://localhost:8000" target="_blank" rel="noopener">本地体验入口</a></li>
+          <li><a href="#run">运行说明</a></li>
+          <li><a href="#verify">验证样例</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>材料说明</h3>
+        <p>截图与 Qoder 开发记录均来自真实运行与真实会话日志；检索日志与统计数字可在本地通过 <code class="cmd-inline">/api/logs/search</code>、<code class="cmd-inline">/api/stats</code> 复核。</p>
+        <p style="margin-top:8px">除 GitHub 跳转外，页面不加载任何外部 CDN、字体或脚本，可离线打开。</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span data-year>2026</span> CiteSeek 知源 · 参赛材料，仅供评审查看</p>
+      <p class="footer-tags"><span>Qoder 赛题</span><span>seekdb 混合检索</span><span>静态站点 · 无外链依赖</span></p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="site-toast" role="status" aria-live="polite"></div>
+<script src="assets/app.js" defer></script>
+</body>
+</html>
