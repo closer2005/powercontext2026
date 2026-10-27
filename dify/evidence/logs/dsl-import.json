@@ -1,0 +1,56 @@
+{
+  "recorded_at": "2026-10-28T03:38:46",
+  "note": "DSL 导入结果与 draft 回读（app-engineer 实测）",
+  "apps_list_http": 200,
+  "apps": [
+    {
+      "id": "acd5e679-4597-4975-989c-0d33b4951a27",
+      "name": "离谱法庭 · The Absurd Court",
+      "mode": "advanced-chat"
+    }
+  ],
+  "draft": {
+    "http": 200,
+    "hash": "a49026ec287cc2dcd1cc4bc4630abf529bb61bf56aec53f76f9f9769dd452d6c",
+    "version": "draft",
+    "nodes": 22,
+    "edges": 25,
+    "node_types": [
+      "answer",
+      "assigner",
+      "code",
+      "http-request",
+      "if-else",
+      "knowledge-retrieval",
+      "llm",
+      "start",
+      "template-transform"
+    ],
+    "conversation_variables": [
+      "stage",
+      "case_no",
+      "defendant",
+      "charge",
+      "claim",
+      "precedent"
+    ],
+    "features": [
+      "file_upload",
+      "opening_statement",
+      "retriever_resource",
+      "sensitive_word_avoidance",
+      "speech_to_text",
+      "suggested_questions",
+      "suggested_questions_after_answer",
+      "text_to_speech"
+    ]
+  },
+  "app_detail": {
+    "http": 200,
+    "name": "离谱法庭 · The Absurd Court",
+    "mode": "advanced-chat",
+    "enable_site": true,
+    "enable_api": true,
+    "site_access_token": "K8QbQ7FyPrrWha2C"
+  }
+}

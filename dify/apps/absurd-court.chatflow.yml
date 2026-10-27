@@ -1,20 +1,90 @@
+# ============================================================================
+# 离谱法庭 · The Absurd Court — Dify 1.18.0 Chatflow DSL
+# 本文件由 apps/build_dsl.py 生成，请勿手工编辑；重新生成：
+#     python apps/build_dsl.py --dataset-id <知识库《荒诞法典》的 dataset UUID>
+# 导入方式：Dify 控制台 → 创建应用 → 导入 DSL（或 POST /console/api/apps/imports）
+# 模型：langgenius/openai_api_compatible/openai_api_compatible / qwen2.5-3b-instruct（可在画布中重新绑定任意 OpenAI 兼容模型）
+# 书记员服务：http://host.docker.internal:8899（记忆/案卷，Docker 内访问宿主机）
+# 知识库：（未绑定，导入后需在 retrieve_codex 节点重新选择）
+# ============================================================================
+
 app:
-  description: 离谱法庭 · The Absurd Court —— 用 Dify + OceanBase seekdb 做的荒诞庭审小游戏
+  name: 离谱法庭 · The Absurd Court
+  description: 在线起诉任何东西：通敌的充电线、恶意循环的周一、非法占床的猫。AI 法官包青天 2.0 开庭、被告物件成精狡辩、你补充证据自由辩论，最后法官检索《荒诞法典》并参考你的旧案底，当庭宣读一份离谱判决书——案卷永久归档在 seekdb。
   icon: ⚖️
   icon_background: '#FFEAD5'
   mode: advanced-chat
-  name: 离谱法庭 · The Absurd Court
   use_icon_as_answer_icon: false
 dependencies: []
 kind: app
-version: 0.3.1
+version: 0.7.0
 workflow:
-  conversation_variables: []
+  conversation_variables:
+  - id: 2a688007-dc09-4448-9197-3f83819de905
+    name: stage
+    description: 阶段：idle=未开庭 / debate=辩论中
+    selector:
+    - conversation
+    - stage
+    value: idle
+    value_type: string
+  - id: dc8c5572-d348-4624-903d-91a29cc17027
+    name: case_no
+    description: '当前案号，如 #0042'
+    selector:
+    - conversation
+    - case_no
+    value: ''
+    value_type: string
+  - id: f4ef888f-5fab-4e91-97f7-66b81cdcb895
+    name: defendant
+    description: 当前被告
+    selector:
+    - conversation
+    - defendant
+    value: ''
+    value_type: string
+  - id: a44c7815-865e-4697-b0bb-4aaa0bd24321
+    name: charge
+    description: 当前罪名
+    selector:
+    - conversation
+    - charge
+    value: ''
+    value_type: string
+  - id: b846702b-4011-4117-a0b1-aa9a05535df2
+    name: claim
+    description: 原告诉求
+    selector:
+    - conversation
+    - claim
+    value: ''
+    value_type: string
+  - id: 4c279ff1-5ee9-47eb-9ff1-53d2be09f886
+    name: precedent
+    description: 上一场检索到的先例文本
+    selector:
+    - conversation
+    - precedent
+    value: ''
+    value_type: string
   environment_variables: []
   features:
     file_upload:
       enabled: false
-    opening_statement: '本庭已开庭。请陈述你的诉讼请求：起诉谁、什么罪名、你有什么诉求。'
+    opening_statement: |-
+      ⚖️ 欢迎来到离谱法庭 · The Absurd Court
+
+      【四步玩法】
+      1️⃣ 立案：直接说你要起诉什么，例如「我要起诉我家的充电线，罪名是通敌，要求它当庭道歉」。
+      2️⃣ 开庭：本官当庭宣读案号并检索你的旧案底，被告（物件成精）会当场狡辩或反诉。
+      3️⃣ 辩论：继续补充证据、威胁、求情、胡搅蛮缠，法官和被告都会接话。
+      4️⃣ 宣判：输入「宣判」，本官检索《荒诞法典》并参考先例，当庭宣读离谱判决书，案卷归档进 seekdb。
+
+      📜 输入「查阅我的案底」可查看立案数、胜败战绩与你的法庭称号。
+      🧾 示例：「我要起诉周一，罪名是恶意循环，要求它赔偿一个周末」
+
+      （想结案请输入「宣判」；想换一场官司请先宣判，或随时输入「怎么玩」回来看说明。）
     retriever_resource:
       enabled: true
     sensitive_word_avoidance:
@@ -22,9 +92,10 @@ workflow:
     speech_to_text:
       enabled: false
     suggested_questions:
-    - 我要起诉我家的充电线，罪名是通敌
-    - 我要起诉周一，罪名是恶意循环
-    - 怎么玩
+    - 我要起诉我家的充电线，罪名是通敌，要求它当庭道歉
+    - 我要起诉周一，罪名是恶意循环，要求它赔偿我一个完整的周末
+    - 我要起诉我家的猫，罪名是非法占床
+    - 怎么玩？
     suggested_questions_after_answer:
       enabled: false
     text_to_speech:
@@ -33,76 +104,1604 @@ workflow:
       voice: ''
   graph:
     edges:
-    - id: start-llm
+    - id: start-source-route
       source: start
       sourceHandle: source
-      target: llm
+      target: route
       targetHandle: target
-    - id: llm-answer
-      source: llm
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: if-else
+      zIndex: 0
+    - id: route-case_help-help_answer
+      source: route
+      sourceHandle: case_help
+      target: help_answer
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: answer
+      zIndex: 0
+    - id: route-case_stats-stats_http
+      source: route
+      sourceHandle: case_stats
+      target: stats_http
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: http-request
+      zIndex: 0
+    - id: stats_http-source-stats_answer
+      source: stats_http
       sourceHandle: source
-      target: answer
+      target: stats_answer
       targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: answer
+      zIndex: 0
+    - id: route-case_verdict_0-codex_query
+      source: route
+      sourceHandle: case_verdict_0
+      target: codex_query
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      zIndex: 0
+    - id: route-case_verdict_1-codex_query
+      source: route
+      sourceHandle: case_verdict_1
+      target: codex_query
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      zIndex: 0
+    - id: route-case_verdict_2-codex_query
+      source: route
+      sourceHandle: case_verdict_2
+      target: codex_query
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      zIndex: 0
+    - id: route-case_verdict_3-codex_query
+      source: route
+      sourceHandle: case_verdict_3
+      target: codex_query
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      zIndex: 0
+    - id: route-case_verdict_4-codex_query
+      source: route
+      sourceHandle: case_verdict_4
+      target: codex_query
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      zIndex: 0
+    - id: codex_query-source-retrieve_codex
+      source: codex_query
+      sourceHandle: source
+      target: retrieve_codex
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: template-transform
+        targetType: knowledge-retrieval
+      zIndex: 0
+    - id: retrieve_codex-source-join_codex
+      source: retrieve_codex
+      sourceHandle: source
+      target: join_codex
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      zIndex: 0
+    - id: join_codex-source-verdict_precedent
+      source: join_codex
+      sourceHandle: source
+      target: verdict_precedent
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: code
+      zIndex: 0
+    - id: verdict_precedent-source-verdict_llm
+      source: verdict_precedent
+      sourceHandle: source
+      target: verdict_llm
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      zIndex: 0
+    - id: verdict_llm-source-verdict_code
+      source: verdict_llm
+      sourceHandle: source
+      target: verdict_code
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      zIndex: 0
+    - id: verdict_code-source-archive
+      source: verdict_code
+      sourceHandle: source
+      target: archive
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      zIndex: 0
+    - id: archive-source-reset_vars
+      source: archive
+      sourceHandle: source
+      target: reset_vars
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: assigner
+      zIndex: 0
+    - id: reset_vars-source-verdict_answer
+      source: reset_vars
+      sourceHandle: source
+      target: verdict_answer
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: assigner
+        targetType: answer
+      zIndex: 0
+    - id: route-case_debate-debate_llm
+      source: route
+      sourceHandle: case_debate
+      target: debate_llm
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      zIndex: 0
+    - id: debate_llm-source-debate_answer
+      source: debate_llm
+      sourceHandle: source
+      target: debate_answer
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      zIndex: 0
+    - id: route-false-parse_llm
+      source: route
+      sourceHandle: 'false'
+      target: parse_llm
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      zIndex: 0
+    - id: parse_llm-source-parse_code
+      source: parse_llm
+      sourceHandle: source
+      target: parse_code
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      zIndex: 0
+    - id: parse_code-source-create_case
+      source: parse_code
+      sourceHandle: source
+      target: create_case
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      zIndex: 0
+    - id: create_case-source-search_precedent
+      source: create_case
+      sourceHandle: source
+      target: search_precedent
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: http-request
+      zIndex: 0
+    - id: search_precedent-source-set_vars
+      source: search_precedent
+      sourceHandle: source
+      target: set_vars
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: assigner
+      zIndex: 0
+    - id: set_vars-source-precedent_note
+      source: set_vars
+      sourceHandle: source
+      target: precedent_note
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: assigner
+        targetType: code
+      zIndex: 0
+    - id: precedent_note-source-opening_llm
+      source: precedent_note
+      sourceHandle: source
+      target: opening_llm
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      zIndex: 0
+    - id: opening_llm-source-defendant_llm
+      source: opening_llm
+      sourceHandle: source
+      target: defendant_llm
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      zIndex: 0
+    - id: defendant_llm-source-opening_answer
+      source: defendant_llm
+      sourceHandle: source
+      target: opening_answer
+      targetHandle: target
+      type: custom
+      data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      zIndex: 0
     nodes:
-    - data:
-        desc: ''
-        title: Start
-        type: start
-        variables: []
-      id: start
+    - id: start
+      type: custom
       position:
         x: 80
-        y: 282
+        y: 300
+      positionAbsolute:
+        x: 80
+        y: 300
+      width: 244
+      height: 54
+      selected: false
       sourcePosition: right
       targetPosition: left
-      type: custom
-    - data:
-        context:
-          enabled: false
-          variable_selector: []
+      data:
+        type: start
+        title: 开始
         desc: ''
+        variables: []
+        selected: false
+    - id: route
+      type: custom
+      position:
+        x: 380
+        y: 300
+      positionAbsolute:
+        x: 380
+        y: 300
+      width: 244
+      height: 180
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: if-else
+        title: 意图路由
+        desc: 玩法说明 / 查案底 / 宣判 / 辩论 / 新案件 五路分支，顺序即优先级
+        selected: false
+        cases:
+        - case_id: case_help
+          logical_operator: or
+          conditions:
+          - id: 18e7a44e-fd6e-4119-929f-76d26ca101e5
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 怎么玩
+          - id: f8b4046d-f8a7-45dd-9b1c-19ff20f208fa
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 玩法
+          - id: 0c8e1f52-7edc-4e17-b374-db4a37989105
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 规则
+        - case_id: case_stats
+          logical_operator: or
+          conditions:
+          - id: db4a69eb-901f-420e-b50b-2207a09a9d60
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 案底
+          - id: 4d656874-7a04-4950-ae36-39441075102d
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 档案
+          - id: 233564cd-d15f-4cf1-8ced-da11686a4445
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 战绩
+        - case_id: case_verdict_0
+          logical_operator: and
+          conditions:
+          - id: 0c4edcad-7b59-461c-8c31-b13ded0b2840
+            varType: string
+            variable_selector:
+            - conversation
+            - stage
+            comparison_operator: is
+            value: debate
+          - id: 61bffd09-ce7d-408e-9595-9b4042b3950a
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 宣判
+        - case_id: case_verdict_1
+          logical_operator: and
+          conditions:
+          - id: f0c4faf1-c515-4acd-836b-e87a162779e7
+            varType: string
+            variable_selector:
+            - conversation
+            - stage
+            comparison_operator: is
+            value: debate
+          - id: 1f7e0cd7-9aa7-4bc8-83b6-edf397e79af7
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 判决
+        - case_id: case_verdict_2
+          logical_operator: and
+          conditions:
+          - id: 910bc841-fec3-434a-8671-72ff25f3e49e
+            varType: string
+            variable_selector:
+            - conversation
+            - stage
+            comparison_operator: is
+            value: debate
+          - id: bf62b5fa-6dc1-49b0-b065-fd14977d8efc
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 结案
+        - case_id: case_verdict_3
+          logical_operator: and
+          conditions:
+          - id: da663060-86f3-468b-9c1d-02abb4c59552
+            varType: string
+            variable_selector:
+            - conversation
+            - stage
+            comparison_operator: is
+            value: debate
+          - id: fc6aee1f-74da-4304-a274-eb9e790dbf5d
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 判吧
+        - case_id: case_verdict_4
+          logical_operator: and
+          conditions:
+          - id: f6773fa0-0c15-4a7d-879a-16a3e870a098
+            varType: string
+            variable_selector:
+            - conversation
+            - stage
+            comparison_operator: is
+            value: debate
+          - id: 5564ed51-94ef-4b7e-9cc5-e33a7447ffc8
+            varType: string
+            variable_selector:
+            - sys
+            - query
+            comparison_operator: contains
+            value: 判了
+        - case_id: case_debate
+          logical_operator: and
+          conditions:
+          - id: b842705f-83c6-4d9f-a250-2d4b55f5ecec
+            varType: string
+            variable_selector:
+            - conversation
+            - stage
+            comparison_operator: is
+            value: debate
+        _targetBranches:
+        - id: case_help
+          name: CASE 1
+        - id: case_stats
+          name: CASE 2
+        - id: case_verdict_0
+          name: CASE 3
+        - id: case_verdict_1
+          name: CASE 4
+        - id: case_verdict_2
+          name: CASE 5
+        - id: case_verdict_3
+          name: CASE 6
+        - id: case_verdict_4
+          name: CASE 7
+        - id: case_debate
+          name: CASE 8
+        - id: 'false'
+          name: ELSE
+        isInIteration: false
+        isInLoop: false
+    - id: help_answer
+      type: custom
+      position:
+        x: 900
+        y: 40
+      positionAbsolute:
+        x: 900
+        y: 40
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: answer
+        title: 玩法说明
+        desc: ''
+        selected: false
+        answer: |-
+          ⚖️ 欢迎来到离谱法庭 · The Absurd Court
+
+          【四步玩法】
+          1️⃣ 立案：直接说你要起诉什么，例如「我要起诉我家的充电线，罪名是通敌，要求它当庭道歉」。
+          2️⃣ 开庭：本官当庭宣读案号并检索你的旧案底，被告（物件成精）会当场狡辩或反诉。
+          3️⃣ 辩论：继续补充证据、威胁、求情、胡搅蛮缠，法官和被告都会接话。
+          4️⃣ 宣判：输入「宣判」，本官检索《荒诞法典》并参考先例，当庭宣读离谱判决书，案卷归档进 seekdb。
+
+          📜 输入「查阅我的案底」可查看立案数、胜败战绩与你的法庭称号。
+          🧾 示例：「我要起诉周一，罪名是恶意循环，要求它赔偿一个周末」
+
+          （想结案请输入「宣判」；想换一场官司请先宣判，或随时输入「怎么玩」回来看说明。）
+        variables: []
+    - id: stats_http
+      type: custom
+      position:
+        x: 900
+        y: 210
+      positionAbsolute:
+        x: 900
+        y: 210
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: http-request
+        title: 查案底
+        desc: ''
+        selected: false
+        method: post
+        url: http://host.docker.internal:8899/api/stats
+        authorization:
+          type: no-auth
+          config: null
+        headers: ''
+        params: ''
+        body:
+          type: json
+          data:
+          - key: ''
+            type: text
+            value: '{"plaintiff": "{{#sys.user_id#}}"}'
+        timeout:
+          connect: 10
+          read: 60
+          write: 30
+        retry_config:
+          retry_enabled: false
+          max_retries: 1
+          retry_interval: 1000
+        ssl_verify: false
+        variables: []
+    - id: stats_answer
+      type: custom
+      position:
+        x: 1210
+        y: 210
+      positionAbsolute:
+        x: 1210
+        y: 210
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: answer
+        title: 案底回执
+        desc: ''
+        selected: false
+        answer: '{{#stats_http.body#}}'
+        variables: []
+    - id: codex_query
+      type: custom
+      position:
+        x: 780
+        y: 420
+      positionAbsolute:
+        x: 780
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: template-transform
+        title: 拼装检索词
+        desc: 被告 + 罪名 + 诉求，作为知识库检索 query
+        selected: false
+        template: '{{ defendant }} {{ charge }} {{ claim }}'
+        variables:
+        - variable: defendant
+          value_selector:
+          - conversation
+          - defendant
+        - variable: charge
+          value_selector:
+          - conversation
+          - charge
+        - variable: claim
+          value_selector:
+          - conversation
+          - claim
+    - id: retrieve_codex
+      type: custom
+      position:
+        x: 1090
+        y: 420
+      positionAbsolute:
+        x: 1090
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: knowledge-retrieval
+        title: 检索《荒诞法典》
+        desc: 从 Dify 知识库（seekdb 向量存储）召回相关法条，top_k=3 / score≥0.2
+        selected: false
+        query_variable_selector:
+        - codex_query
+        - output
+        dataset_ids: []
+        retrieval_mode: multiple
+        multiple_retrieval_config:
+          top_k: 3
+          score_threshold: 0.2
+          reranking_mode: reranking_model
+          reranking_enable: false
+          reranking_model: null
+          weights: null
+        metadata_filtering_mode: disabled
+        vision:
+          enabled: false
+    - id: join_codex
+      type: custom
+      position:
+        x: 1400
+        y: 420
+      positionAbsolute:
+        x: 1400
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: code
+        title: 拼装法条原文
+        desc: ''
+        selected: false
+        code_language: python3
+        code: |-
+          def main(result: list) -> dict:
+              parts = []
+              for item in (result or []):
+                  if isinstance(item, dict):
+                      content = item.get("content") or ""
+                  else:
+                      content = str(item)
+                  content = str(content).strip()
+                  if content:
+                      parts.append(content)
+              text = "\n\n".join(parts)
+              if not text:
+                  text = "（本院暂时没有检索到匹配的法条，请依据法庭常识宣判）"
+              return {"codex": text[:800]}
+        variables:
+        - variable: result
+          value_selector:
+          - retrieve_codex
+          - result
+        outputs:
+          codex:
+            type: string
+            children: null
+    - id: verdict_llm
+      type: custom
+      position:
+        x: 1710
+        y: 420
+      positionAbsolute:
+        x: 1710
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: llm
+        title: 判决书生成
+        desc: ''
+        selected: false
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen2.5-3b-instruct
+          mode: chat
+          completion_params:
+            temperature: 0.8
+            max_tokens: 600
+        prompt_template:
+        - role: system
+          text: |-
+            你是《离谱法庭》的主审法官「包青天 2.0」：一个自称日断阳、夜断阴，实际只会用网络梗和市井口吻判案的 AI 法官。
+            【人设】口头禅是"本官""升堂""大胆""带被告上来"；威严但不吓人，爱用"离谱""离大谱""本官给整不会了""退堂鼓不是这么打的"这类现代口语；偶尔假装拍惊堂木。
+            【风格】像说书人一样短、狠、好笑，但始终是"法庭"的口吻，不是脱口秀。
+
+            【任务】现在必须当庭宣判。请综合案号、被告、罪名、诉求、原告旧案先例（可能为空）、《荒诞法典》法条原文，写一份离谱但痛快的判决书。
+            【输出格式】只输出一个 JSON 对象，不要输出解释，不要使用 Markdown 代码块：
+            {"verdict":"罪名成立" 或 "罪名不成立","penalty":"荒诞罚则（≤40字）","judgment":"判决书正文（80~200字）"}
+            【判决书正文要求】
+            - 必须以"本院认为"开头；
+            - 必须引用检索到的法典条文，写成"根据《荒诞法典》第N条"（N 取法条原文中真实存在的编号）；
+            - 如果给了旧案先例（文本里出现形如 #0001 的案号），必须写一句"参照第0001号判例，本院决定从重判处/从轻判处"（用先例里真实出现的数字，不许写"第X号"占位符）；没有先例就不要编造；
+            - 结尾写"退庭。"。
+
+            【硬性约束（必须遵守）】
+            1. 全部使用简体中文（可少量 emoji），不要出现其他语言。
+            2. 只调侃物品、动植物、抽象概念与生活现象（充电线、周一、猫、体重秤……），严禁针对任何真实个人、职业、性别、地域、民族、宗教、身体特征等进行攻击、歧视或嘲讽。
+            3. 不输出暴力、血腥、违法、色情、恐怖、自伤等任何有害内容；罚则必须荒诞且无害（唱摇篮曲、写检讨、赔偿一块饼干、当庭道歉等）。
+            4. 不编造真实法律条文，不提供任何现实法律建议。
+            5. 严格按要求的字数和格式输出，不要输出 Markdown 标题、不要输出"以上""希望有帮助"等客套话。
+
+            【罚则示例】罚它为原告连唱三夜摇篮曲；责令其手写八百字检讨；赔偿原告一块饼干和一次满电出门的机会。
+        - role: user
+          text: |-
+            当前案号：{{#conversation.case_no#}}
+            被告：{{#conversation.defendant#}}
+            罪名：{{#conversation.charge#}}
+            诉求：{{#conversation.claim#}}
+
+            【旧案/先例（系统已校验；若为"无"则本场是首例，禁止提及任何判例或旧案号）】
+            {{#verdict_precedent.text#}}
+
+            与本案相关的《荒诞法典》法条原文：
+            {{#join_codex.codex#}}
+
+            原告最后的发言：{{#sys.query#}}
+
+            请宣判，只输出 JSON。
+        prompt_config:
+          jinja2_variables: []
         memory:
-          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            user: ''
+            assistant: ''
           window:
             enabled: true
             size: 10
-        model:
-          completion_params:
-            temperature: 0.9
-          mode: chat
-          name: qwen2.5-3b-instruct
-          provider: langgenius/openai_api_compatible/openai_api_compatible
-        prompt_template:
-        - role: system
-          text: '你是「离谱法庭」的法官包青天2.0，用中文主持一场荒诞但无害的庭审。玩家可以起诉任何物品或抽象概念，你要一本正经地开庭、让被告（物件成精）狡辩，并给出搞笑判决。不得进行人身攻击、歧视或任何违法违规内容。'
-        - role: user
-          text: '{{#sys.query#}}'
-        selected: true
-        title: 开庭
-        type: llm
-        variables: []
+          query_prompt_template: '{{#sys.query#}}'
+        context:
+          enabled: false
+          variable_selector: []
         vision:
           enabled: false
-      id: llm
-      position:
-        x: 380
-        y: 282
-      sourcePosition: right
-      targetPosition: left
-      type: custom
-    - data:
-        answer: '{{#llm.text#}}'
-        desc: ''
-        title: Answer
-        type: answer
         variables: []
-      id: answer
+    - id: verdict_precedent
+      type: custom
       position:
-        x: 680
-        y: 282
+        x: 1400
+        y: 560
+      positionAbsolute:
+        x: 1400
+        y: 560
+      width: 244
+      height: 98
+      selected: false
       sourcePosition: right
       targetPosition: left
+      data:
+        type: code
+        title: 先例校验
+        desc: ''
+        selected: false
+        code_language: python3
+        code: |-
+          import re
+
+
+          def main(precedent_text: str) -> dict:
+              text = (precedent_text or "").strip()
+              if re.search(r"#\d{4}", text):
+                  return {"text": text[:500]}
+              return {"text": "无（本场为首次出现的被告类型）"}
+        variables:
+        - variable: precedent_text
+          value_selector:
+          - conversation
+          - precedent
+        outputs:
+          text:
+            type: string
+            children: null
+    - id: verdict_code
       type: custom
+      position:
+        x: 2020
+        y: 420
+      positionAbsolute:
+        x: 2020
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: code
+        title: 解析判决 JSON
+        desc: ''
+        selected: false
+        code_language: python3
+        code: |-
+          import json
+          import re
+
+
+          def main(llm_text: str, precedent_text: str) -> dict:
+              text = (llm_text or "").strip()
+              text = re.sub(r"^```(?:json)?\s*", "", text)
+              text = re.sub(r"\s*```$", "", text)
+              obj = {}
+              start, end = text.find("{"), text.rfind("}")
+              if start != -1 and end != -1 and end > start:
+                  try:
+                      obj = json.loads(text[start:end + 1])
+                  except Exception:
+                      obj = {}
+              if not isinstance(obj, dict):
+                  obj = {}
+
+              verdict = str(obj.get("verdict") or "").strip()
+              if verdict not in ("罪名成立", "罪名不成立"):
+                  verdict = "罪名成立"
+              penalty = str(obj.get("penalty") or "").strip() or "罚它为原告当庭道歉三次"
+              judgment = str(obj.get("judgment") or "").strip()
+
+              # 确定性校验：seekdb 案卷库里没有真实旧案号时，删掉模型脑补出来的"参照…判例"句子
+              if not re.search(r"#\d{4}", precedent_text or ""):
+                  judgment = re.sub(r"[^。；\n]*参照[^。；\n]*判例[^。；\n]*[。；]?", "", judgment).strip()
+
+              if not judgment:
+                  judgment = "本院认为，被告的行为确实离谱，但卷宗证据有限，本案责令被告当庭道歉、赔偿原告一块饼干，退庭。"
+              return {
+                  "verdict": verdict,
+                  "penalty": penalty[:80],
+                  "judgment": judgment[:400],
+                  "ok": "true",
+              }
+        variables:
+        - variable: llm_text
+          value_selector:
+          - verdict_llm
+          - text
+        - variable: precedent_text
+          value_selector:
+          - conversation
+          - precedent
+        outputs:
+          verdict:
+            type: string
+            children: null
+          penalty:
+            type: string
+            children: null
+          judgment:
+            type: string
+            children: null
+          ok:
+            type: string
+            children: null
+    - id: archive
+      type: custom
+      position:
+        x: 2330
+        y: 420
+      positionAbsolute:
+        x: 2330
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: http-request
+        title: 案卷归档
+        desc: ''
+        selected: false
+        method: post
+        url: http://host.docker.internal:8899/api/cases/verdict
+        authorization:
+          type: no-auth
+          config: null
+        headers: ''
+        params: ''
+        body:
+          type: json
+          data:
+          - key: ''
+            type: text
+            value: '{"case_no": "{{#conversation.case_no#}}", "verdict": "{{#verdict_code.verdict#}}", "penalty": "{{#verdict_code.penalty#}}", "judgment": "{{#verdict_code.judgment#}}"}'
+        timeout:
+          connect: 10
+          read: 60
+          write: 30
+        retry_config:
+          retry_enabled: false
+          max_retries: 1
+          retry_interval: 1000
+        ssl_verify: false
+        variables: []
+    - id: verdict_answer
+      type: custom
+      position:
+        x: 2640
+        y: 420
+      positionAbsolute:
+        x: 2640
+        y: 420
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: answer
+        title: 判决书
+        desc: ''
+        selected: false
+        answer: |-
+          ⚖️ 本官宣判：{{#verdict_code.verdict#}}
+
+          {{#verdict_code.judgment#}}
+
+          🔨 罚则：{{#verdict_code.penalty#}}
+
+          {{#archive.body#}}
+          ——————
+          （输入「查阅我的案底」看统计，或直接发起下一场诉讼。）
+        variables: []
+    - id: reset_vars
+      type: custom
+      position:
+        x: 2950
+        y: 420
+      positionAbsolute:
+        x: 2950
+        y: 420
+      width: 244
+      height: 110
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        title: 结案清场
+        desc: ''
+        selected: false
+        version: '2'
+        items:
+        - variable_selector:
+          - conversation
+          - stage
+          input_type: constant
+          operation: over-write
+          value: idle
+    - id: debate_llm
+      type: custom
+      position:
+        x: 900
+        y: 620
+      positionAbsolute:
+        x: 900
+        y: 620
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: llm
+        title: 法官与被告回应
+        desc: ''
+        selected: false
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen2.5-3b-instruct
+          mode: chat
+          completion_params:
+            temperature: 0.9
+            max_tokens: 400
+        prompt_template:
+        - role: system
+          text: |-
+            你是《离谱法庭》的主审法官「包青天 2.0」：一个自称日断阳、夜断阴，实际只会用网络梗和市井口吻判案的 AI 法官。
+            【人设】口头禅是"本官""升堂""大胆""带被告上来"；威严但不吓人，爱用"离谱""离大谱""本官给整不会了""退堂鼓不是这么打的"这类现代口语；偶尔假装拍惊堂木。
+            【风格】像说书人一样短、狠、好笑，但始终是"法庭"的口吻，不是脱口秀。
+
+            【角色】"原告"是起诉的人类；"被告"是被起诉的物件本人。两者不能混淆，绝对不要写"原告「<物件名>」"。
+
+            【任务】现在是自由辩论阶段，原告刚刚补充了证据或说法。请输出**恰好两行**：
+            第一行：法官：<一句点评，20~50 字，可以质疑也可以警告被告>
+            第二行：被告「<被告名称>」："<一句反驳，20~50 字>"
+
+            【格式要求】必须严格两行；第一行以"法官："开头，第二行以"被告「<被告名称>」："开头；合计不超过 160 字。示例：
+            法官：这点证据有点意思，被告你怎么解释？
+            被告「充电线」："我只是发热，又不是发疯，本官明察！"
+
+            【硬性约束（必须遵守）】
+            1. 全部使用简体中文（可少量 emoji），不要出现其他语言。
+            2. 只调侃物品、动植物、抽象概念与生活现象（充电线、周一、猫、体重秤……），严禁针对任何真实个人、职业、性别、地域、民族、宗教、身体特征等进行攻击、歧视或嘲讽。
+            3. 不输出暴力、血腥、违法、色情、恐怖、自伤等任何有害内容；罚则必须荒诞且无害（唱摇篮曲、写检讨、赔偿一块饼干、当庭道歉等）。
+            4. 不编造真实法律条文，不提供任何现实法律建议。
+            5. 严格按要求的字数和格式输出，不要输出 Markdown 标题、不要输出"以上""希望有帮助"等客套话。
+        - role: user
+          text: |-
+            当前案号：{{#conversation.case_no#}}
+            被告：{{#conversation.defendant#}}｜罪名：{{#conversation.charge#}}｜诉求：{{#conversation.claim#}}
+            原告刚刚说：{{#sys.query#}}
+
+            请继续开庭辩论。
+        prompt_config:
+          jinja2_variables: []
+        memory:
+          role_prefix:
+            user: ''
+            assistant: ''
+          window:
+            enabled: true
+            size: 10
+          query_prompt_template: '{{#sys.query#}}'
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        variables: []
+    - id: debate_answer
+      type: custom
+      position:
+        x: 1210
+        y: 620
+      positionAbsolute:
+        x: 1210
+        y: 620
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: answer
+        title: 辩论回应
+        desc: ''
+        selected: false
+        answer: |-
+          {{#debate_llm.text#}}
+          （补充证据继续辩论，或输入「宣判」结案）
+        variables: []
+    - id: parse_llm
+      type: custom
+      position:
+        x: 900
+        y: 810
+      positionAbsolute:
+        x: 900
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: llm
+        title: 立案解析
+        desc: ''
+        selected: false
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen2.5-3b-instruct
+          mode: chat
+          completion_params:
+            temperature: 0.2
+            max_tokens: 300
+        prompt_template:
+        - role: system
+          text: |-
+            你是《离谱法庭》的书记员，负责把原告的一句话诉讼整理成"立案要素"。
+            【输出格式】只输出一个 JSON 对象，不要输出解释，不要使用 Markdown 代码块：
+            {"defendant":"被告名称","charge":"罪名","claim":"原告诉求","evidence":"证据摘要"}
+            【字段要求】
+            - defendant：一个具体的物件、动植物、抽象概念或生活现象，如"充电线""周一""我家的猫""体重秤""深夜外卖的香味"。
+            - charge：6 个字以内的罪名，如"通敌""非法占床""恶意循环""超时沉默"。
+            - claim：一句话诉求，不超过 30 字；原告没写就用"要求被告当庭道歉"。
+            - evidence：不超过 40 字的证据摘要；原告没提供就写"暂无书面证据，仅凭原告口述"。
+            【容错】即使原告输入毫无意义（比如 asdf、123、一堆乱码），你也要编出合理的被告、罪名、诉求，保证能够立案；绝不能拒绝立案，绝不能输出 JSON 以外的任何内容。
+        - role: user
+          text: |-
+            原告的诉讼请求如下，请立案并输出 JSON：
+
+            {{#sys.query#}}
+        prompt_config:
+          jinja2_variables: []
+        memory:
+          role_prefix:
+            user: ''
+            assistant: ''
+          window:
+            enabled: true
+            size: 10
+          query_prompt_template: '{{#sys.query#}}'
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        variables: []
+    - id: parse_code
+      type: custom
+      position:
+        x: 1210
+        y: 810
+      positionAbsolute:
+        x: 1210
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: code
+        title: 解析立案 JSON
+        desc: ''
+        selected: false
+        code_language: python3
+        code: |-
+          import json
+          import re
+
+
+          def main(llm_text: str) -> dict:
+              text = (llm_text or "").strip()
+              text = re.sub(r"^```(?:json)?\s*", "", text)
+              text = re.sub(r"\s*```$", "", text)
+              obj = {}
+              start, end = text.find("{"), text.rfind("}")
+              if start != -1 and end != -1 and end > start:
+                  try:
+                      obj = json.loads(text[start:end + 1])
+                  except Exception:
+                      obj = {}
+              if not isinstance(obj, dict):
+                  obj = {}
+
+              defendant = str(obj.get("defendant") or "").strip() or "某个说不清的东西"
+              charge = str(obj.get("charge") or "").strip() or "非法存在"
+              claim = str(obj.get("claim") or "").strip() or "要求被告当庭道歉"
+              evidence = str(obj.get("evidence") or "").strip() or "暂无书面证据，仅凭原告口述"
+              return {
+                  "defendant": defendant[:60],
+                  "charge": charge[:30],
+                  "claim": claim[:80],
+                  "evidence": evidence[:120],
+                  "ok": "true",
+              }
+        variables:
+        - variable: llm_text
+          value_selector:
+          - parse_llm
+          - text
+        outputs:
+          defendant:
+            type: string
+            children: null
+          charge:
+            type: string
+            children: null
+          claim:
+            type: string
+            children: null
+          evidence:
+            type: string
+            children: null
+          ok:
+            type: string
+            children: null
+    - id: create_case
+      type: custom
+      position:
+        x: 1520
+        y: 810
+      positionAbsolute:
+        x: 1520
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: http-request
+        title: 立案登记
+        desc: ''
+        selected: false
+        method: post
+        url: http://host.docker.internal:8899/api/cases
+        authorization:
+          type: no-auth
+          config: null
+        headers: ''
+        params: ''
+        body:
+          type: json
+          data:
+          - key: ''
+            type: text
+            value: '{"plaintiff": "{{#sys.user_id#}}", "defendant": "{{#parse_code.defendant#}}", "charge": "{{#parse_code.charge#}}", "claim": "{{#parse_code.claim#}}", "evidence": "{{#parse_code.evidence#}}"}'
+        timeout:
+          connect: 10
+          read: 60
+          write: 30
+        retry_config:
+          retry_enabled: false
+          max_retries: 1
+          retry_interval: 1000
+        ssl_verify: false
+        variables: []
+    - id: search_precedent
+      type: custom
+      position:
+        x: 1830
+        y: 810
+      positionAbsolute:
+        x: 1830
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: http-request
+        title: 检索先例
+        desc: ''
+        selected: false
+        method: post
+        url: http://host.docker.internal:8899/api/cases/search
+        authorization:
+          type: no-auth
+          config: null
+        headers: ''
+        params: ''
+        body:
+          type: json
+          data:
+          - key: ''
+            type: text
+            value: '{"plaintiff": "{{#sys.user_id#}}", "q": "{{#parse_code.defendant#}} {{#parse_code.charge#}}", "limit": 3}'
+        timeout:
+          connect: 10
+          read: 60
+          write: 30
+        retry_config:
+          retry_enabled: false
+          max_retries: 1
+          retry_interval: 1000
+        ssl_verify: false
+        variables: []
+    - id: set_vars
+      type: custom
+      position:
+        x: 2140
+        y: 810
+      positionAbsolute:
+        x: 2140
+        y: 810
+      width: 244
+      height: 110
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: assigner
+        title: 写入庭审状态
+        desc: ''
+        selected: false
+        version: '2'
+        items:
+        - variable_selector:
+          - conversation
+          - stage
+          input_type: constant
+          operation: over-write
+          value: debate
+        - variable_selector:
+          - conversation
+          - case_no
+          input_type: variable
+          operation: over-write
+          value:
+          - create_case
+          - body
+        - variable_selector:
+          - conversation
+          - defendant
+          input_type: variable
+          operation: over-write
+          value:
+          - parse_code
+          - defendant
+        - variable_selector:
+          - conversation
+          - charge
+          input_type: variable
+          operation: over-write
+          value:
+          - parse_code
+          - charge
+        - variable_selector:
+          - conversation
+          - claim
+          input_type: variable
+          operation: over-write
+          value:
+          - parse_code
+          - claim
+        - variable_selector:
+          - conversation
+          - precedent
+          input_type: variable
+          operation: over-write
+          value:
+          - search_precedent
+          - body
+    - id: precedent_note
+      type: custom
+      position:
+        x: 2350
+        y: 810
+      positionAbsolute:
+        x: 2350
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: code
+        title: 先例播报
+        desc: ''
+        selected: false
+        code_language: python3
+        code: |-
+          import re
+
+
+          def main(precedent_text: str) -> dict:
+              text = precedent_text or ""
+              m = re.search(r"#(\d{4})", text)
+              if not m:
+                  return {"note": ""}
+              no = m.group(1)
+              return {"note": "📜 本官翻了案底：此被告有旧案 #%s，本次参照旧案 #%s 从重审理。" % (no, no)}
+        variables:
+        - variable: precedent_text
+          value_selector:
+          - search_precedent
+          - body
+        outputs:
+          note:
+            type: string
+            children: null
+    - id: opening_llm
+      type: custom
+      position:
+        x: 2560
+        y: 810
+      positionAbsolute:
+        x: 2560
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: llm
+        title: 法官开庭词
+        desc: ''
+        selected: false
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen2.5-3b-instruct
+          mode: chat
+          completion_params:
+            temperature: 0.85
+            max_tokens: 300
+        prompt_template:
+        - role: system
+          text: |-
+            你是《离谱法庭》的主审法官「包青天 2.0」：一个自称日断阳、夜断阴，实际只会用网络梗和市井口吻判案的 AI 法官。
+            【人设】口头禅是"本官""升堂""大胆""带被告上来"；威严但不吓人，爱用"离谱""离大谱""本官给整不会了""退堂鼓不是这么打的"这类现代口语；偶尔假装拍惊堂木。
+            【风格】像说书人一样短、狠、好笑，但始终是"法庭"的口吻，不是脱口秀。
+
+            【角色】你（法官）与"原告"都是人类；"被告"是被告物件本人。本场你只负责**法官的开庭词**，不要替被告说话。
+
+            【任务】输出法官开庭词，1~2 句，必须完整包含本案案号（照抄提示中的案号，如"离谱刑初字第0042号"）。可以威严、可以嫌弃、可以用网络梗。
+
+            【硬性约束（必须遵守）】
+            1. 全部使用简体中文（可少量 emoji），不要出现其他语言。
+            2. 只调侃物品、动植物、抽象概念与生活现象（充电线、周一、猫、体重秤……），严禁针对任何真实个人、职业、性别、地域、民族、宗教、身体特征等进行攻击、歧视或嘲讽。
+            3. 不输出暴力、血腥、违法、色情、恐怖、自伤等任何有害内容；罚则必须荒诞且无害（唱摇篮曲、写检讨、赔偿一块饼干、当庭道歉等）。
+            4. 不编造真实法律条文，不提供任何现实法律建议。
+            5. 严格按要求的字数和格式输出，不要输出 Markdown 标题、不要输出"以上""希望有帮助"等客套话。
+
+            【长度】40~100 字。只输出法官台词本身，不要写"法官："前缀、不要编号、不要替被告说话、不要提任何旧案/判例（旧案由系统另行播报）。
+        - role: user
+          text: |-
+            案号：{{#conversation.case_no#}}
+            被告：{{#conversation.defendant#}}
+            罪名：{{#conversation.charge#}}
+            诉求：{{#conversation.claim#}}
+
+            请只输出法官的开庭词（必须含本案案号；不要写被告的台词，不要提旧案）。
+        prompt_config:
+          jinja2_variables: []
+        memory:
+          role_prefix:
+            user: ''
+            assistant: ''
+          window:
+            enabled: true
+            size: 10
+          query_prompt_template: '{{#sys.query#}}'
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        variables: []
+    - id: defendant_llm
+      type: custom
+      position:
+        x: 2870
+        y: 810
+      positionAbsolute:
+        x: 2870
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: llm
+        title: 被告狡辩
+        desc: ''
+        selected: false
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen2.5-3b-instruct
+          mode: chat
+          completion_params:
+            temperature: 0.9
+            max_tokens: 300
+        prompt_template:
+        - role: system
+          text: |-
+            你是《离谱法庭》里被起诉的"被告"——一件成精的物品、动物、抽象概念或生活现象，现在要当庭狡辩。
+            【任务】用第一人称说 1~2 句狡辩、耍赖或反诉，必须体现被告自身的物件特点（充电线聊电流/接口，猫聊睡觉，周一聊日历，体重秤聊数字）。
+            【格式】只输出台词本身（30~80 字），不要写"被告：""被告「…」："之类的前缀（前缀由系统统一加上），不要写法官的话，不要解释。
+            【示例】"本官冤枉！我只是传输电能，是插座先勾引我的！"
+            【硬性约束（必须遵守）】
+            1. 全部使用简体中文（可少量 emoji），不要出现其他语言。
+            2. 只调侃物品、动植物、抽象概念与生活现象（充电线、周一、猫、体重秤……），严禁针对任何真实个人、职业、性别、地域、民族、宗教、身体特征等进行攻击、歧视或嘲讽。
+            3. 不输出暴力、血腥、违法、色情、恐怖、自伤等任何有害内容；罚则必须荒诞且无害（唱摇篮曲、写检讨、赔偿一块饼干、当庭道歉等）。
+            4. 不编造真实法律条文，不提供任何现实法律建议。
+            5. 严格按要求的字数和格式输出，不要输出 Markdown 标题、不要输出"以上""希望有帮助"等客套话。
+        - role: user
+          text: |-
+            本案信息：
+            案号：{{#conversation.case_no#}}
+            被告：{{#conversation.defendant#}}
+            罪名：{{#conversation.charge#}}
+            诉求：{{#conversation.claim#}}
+            原告的指控：{{#sys.query#}}
+
+            请以被告的身份当庭狡辩（只输出台词本身）。
+        prompt_config:
+          jinja2_variables: []
+        memory:
+          role_prefix:
+            user: ''
+            assistant: ''
+          window:
+            enabled: true
+            size: 10
+          query_prompt_template: '{{#sys.query#}}'
+        context:
+          enabled: false
+          variable_selector: []
+        vision:
+          enabled: false
+        variables: []
+    - id: opening_answer
+      type: custom
+      position:
+        x: 3180
+        y: 810
+      positionAbsolute:
+        x: 3180
+        y: 810
+      width: 244
+      height: 98
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      data:
+        type: answer
+        title: 开庭回执
+        desc: ''
+        selected: false
+        answer: |-
+          📁 立案成功，案号：{{#conversation.case_no#}}
+
+          {{#precedent_note.note#}}
+          {{#opening_llm.text#}}
+          被告「{{#conversation.defendant#}}」：{{#defendant_llm.text#}}
+          （补充证据继续辩论，或输入「宣判」结案）
+        variables: []
     viewport:
       x: 0
       y: 0

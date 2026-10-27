@@ -1,0 +1,23 @@
+# Local override for the 600076 Dify + seekdb stack (env-engineer).
+# - seekdb container port stays 2881; only the host-published port changes because
+#   host port 2881 is already used by another container (seekdb-stepfun).
+# - plugin_daemon (Go) only supports DB_TYPE=postgresql|mysql; seekdb speaks the
+#   MySQL protocol, so the plugin daemon uses the mysql driver against the same
+#   seekdb container while dify api/worker use DB_TYPE=seekdb.
+# - plugin_daemon /app/storage moved from a Windows bind mount to a named volume:
+#   the plugin venv (thousands of small files) on a Docker-Desktop Windows bind mount
+#   makes every import stat() pathologically slow, so the plugin never finished its
+#   stdio handshake within the 2 minute install timeout.
+services:
+  seekdb:
+    ports: !override
+      - "${SEEKDB_HOST_PORT:-2885}:2881"
+  plugin_daemon:
+    environment:
+      DB_TYPE: ${PLUGIN_DAEMON_DB_TYPE:-mysql}
+    volumes: !override
+      - plugin_daemon_storage:/app/storage
+
+volumes:
+  plugin_daemon_storage:
+    name: dify600076_plugin_daemon_storage
