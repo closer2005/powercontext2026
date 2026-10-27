@@ -29,6 +29,7 @@
       <li><a href="#tech">技术</a></li>
       <li><a href="#evidence">证据</a></li>
       <li><a href="#build">开发记录</a></li>
+      <li><a href="#selftest">自测数据</a></li>
       <li><a href="#run">运行</a></li>
       <li><a class="nav-cta" href="https://github.com/closer2005/powercontext2026/tree/2026-competition-ecosystem/qoder" target="_blank" rel="noopener">代码仓库</a></li>
     </ul>
@@ -140,7 +141,7 @@
               <p style="margin-top:8px">“<span class="hit">事务隔离级别</span>「MVCC 的可见性判断 + 锁」共同实现，这篇只整理 MVCC 这一半。RC 每条 SELECT 重建 Read View，能读到别人已提交的新数据；RR 事务内复用同一个 Read View，于是可重复读；MVCC 只解决读不加锁，写写冲突仍然靠锁。”</p>
               <p style="margin-top:8px"><strong>出自</strong>：《MVCC 版本链与 Read View》· 第 3 段 · 课程「数据库系统」/ 主题「事务与并发」</p>
             </div>
-            <div class="chat-meta"><span>耗时 115 ms</span><span>命中：vector + fulltext</span><span>RRF 融合</span></div>
+            <div class="chat-meta"><span>耗时 363 ms（首次含模型预热）</span><span>命中：vector + fulltext</span><span>RRF 融合</span></div>
           </div>
         </div>
         <figure class="shot"><img src="assets/demo.gif" alt="界面流程动图：载入示例数据 → 混合检索 → 加入复习"><figcaption>界面流程动图 · 真实截图合成（非录屏）</figcaption></figure>
@@ -202,13 +203,13 @@
       <div class="section-head">
         <p class="section-kicker">Evidence · 技术证据</p>
         <h2 class="section-title">可核对的检索日志与 collection 统计</h2>
-        <p class="section-sub">下列数字与日志来自 2026-10-28 本地真实运行（notes 27 / chunks 62，最近 7 次查询均值 71.1 ms），可按本节末尾命令复核。</p>
+        <p class="section-sub">下列数字与日志来自 2026-10-28 本地真实运行（notes 27 / chunks 62，5 次查询平均 138.6 ms，首次含模型预热 363 ms），可按本节末尾命令复核。</p>
       </div>
       <div class="stat-grid">
         <div class="stat"><p class="stat-value">1</p><p class="stat-label">collection</p><p class="stat-hint">citeseek_chunks_v1 · 512 维 · HNSW cosine</p></div>
         <div class="stat"><p class="stat-value">27</p><p class="stat-label">notes</p><p class="stat-hint">data/samples 示例笔记</p></div>
         <div class="stat"><p class="stat-value">62</p><p class="stat-label">chunks</p><p class="stat-hint">平均每篇约 2.3 段</p></div>
-        <div class="stat"><p class="stat-value">71 ms</p><p class="stat-label">平均检索耗时</p><p class="stat-hint">最近 7 次查询均值</p></div>
+        <div class="stat"><p class="stat-value">138.6 ms</p><p class="stat-label">平均检索耗时</p><p class="stat-hint">5 次查询均值（首次含预热 363 ms）</p></div>
       </div>
       <div class="table-wrap">
         <div class="table-head"><h3>最近检索日志</h3><p class="table-note">真实运行记录（2026-10-28）· 可调用 <code class="cmd-inline">GET /api/logs/search</code> 复核</p></div>
@@ -218,11 +219,11 @@
             <thead><tr><th scope="col">时间</th><th scope="col">query</th><th scope="col">模式</th><th scope="col">耗时</th><th scope="col">结果数</th><th scope="col">命中来源</th></tr></thead>
             <tbody>
               
-              <tr><td class="num">03:59:40</td><td>向量检索和全文检索怎么结合</td><td><span class="badge badge-m">hybrid</span></td><td class="num">65 ms</td><td class="num">4</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
-              <tr><td class="num">03:59:40</td><td>事务隔离级别有哪些</td><td><span class="badge badge-m">hybrid</span></td><td class="num">62 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
-              <tr><td class="num">03:59:40</td><td>贝叶斯公式在分类里怎么用</td><td><span class="badge badge-m">hybrid</span></td><td class="num">70 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
-              <tr><td class="num">03:59:40</td><td>怎么避免模型过拟合</td><td><span class="badge badge-m">hybrid</span></td><td class="num">68 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
-              <tr><td class="num">03:59:40</td><td>神经网络里的注意力机制</td><td><span class="badge badge-m">hybrid</span></td><td class="num">53 ms</td><td class="num">4</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">04:14:58</td><td>检索</td><td><span class="badge badge-m">hybrid</span></td><td class="num">174 ms</td><td class="num">4</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">04:14:58</td><td>索引</td><td><span class="badge badge-m">hybrid</span></td><td class="num">65 ms</td><td class="num">8</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">04:14:57</td><td>索引</td><td><span class="badge badge-m">hybrid</span></td><td class="num">43 ms</td><td class="num">8</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">04:14:57</td><td>并发事务之间的可见性怎么保证</td><td><span class="badge badge-m">hybrid</span></td><td class="num">48 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
+              <tr><td class="num">04:14:56</td><td>事务隔离级别有哪些</td><td><span class="badge badge-m">hybrid</span></td><td class="num">363 ms</td><td class="num">5</td><td><span class="badge badge-v">向量</span> <span class="badge badge-f">全文</span></td></tr>
             
               </tbody>
           </table>
@@ -243,7 +244,7 @@ mysql -h127.0.0.1 -P2881 -uroot citeseek \
       <div class="section-head">
         <p class="section-kicker">Build with Qoder · 开发记录</p>
         <h2 class="section-title">从需求拆解到发布，Qoder 参与了全流程</h2>
-        <p class="section-sub">以下时间线对应 Qoder CN CLI 的两个真实开发会话（2026-10-28 03:14–03:51，共 104 次模型请求、60 Credits、23 个文件由 Qoder 创建），截图由会话日志自动抽取。</p>
+        <p class="section-sub">以下时间线对应 Qoder CN CLI 的 6 个真实会话（2026-10-28 03:14–05:19，共 184 次模型请求、95 Credits、23 个文件由 Qoder 创建；含后端实现、修复与前端、评委视角自审，以及两次 Qoder Sites 发布会话），截图由会话日志自动抽取。</p>
       </div>
       <div class="timeline">
         <div class="tl-item">
@@ -423,11 +424,39 @@ cd powercontext2026/qoder</code></pre>
               <tr><td>代码仓库</td><td><a href="https://github.com/closer2005/powercontext2026/tree/2026-competition-ecosystem/qoder" target="_blank" rel="noopener">powercontext2026 · qoder/</a></td><td>公开仓库，含 app/ web/ data/ tests/ docs/ site/ 全量源码</td></tr>
               <tr><td>运行说明</td><td><a href="#run">本页「运行说明」</a> / <code class="cmd-inline">docs/RUNBOOK.md</code></td><td><code class="cmd-inline">docker compose up -d --build</code> → 打开 <code class="cmd-inline">localhost:8000</code></td></tr>
               <tr><td>验证样例</td><td><a href="#verify">本页「验证样例」</a> / <code class="cmd-inline">docs/VERIFY.md</code></td><td>3 组样例均给出 curl、预期字段与 seekdb 证据</td></tr>
-              <tr><td>Qoder 开发记录</td><td><a href="#build">本页「开发记录」</a> / <code class="cmd-inline">docs/QODER_DEV_RECORD.md</code></td><td>2 个真实会话、104 次请求、60 Credits；账号与 UID 见开发记录区</td></tr>
+              <tr><td>Qoder 开发记录</td><td><a href="#build">本页「开发记录」</a> / <code class="cmd-inline">docs/QODER_DEV_RECORD.md</code></td><td>6 个真实会话、184 次请求、95 Credits（含开发、自审与两次 Qoder Sites 发布）；账号与 UID 见开发记录区</td></tr>
               <tr><td>技术证据</td><td><a href="#evidence">本页「技术证据」</a> / <code class="cmd-inline">/api/logs/search</code></td><td>search_log 含 query/耗时/结果数/向量与全文命中；collection 62 条</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10.5 · 内部自测数据 -->
+  <section class="section" id="selftest">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Self-test · 自测数据</p>
+        <h2 class="section-title">内部自测与降级验证</h2>
+        <p class="section-sub">数据来自本地真实运行日志（<code class="cmd-inline">docs/verify_output.json</code>），非模拟；项目尚未开展真实用户测试，因此不提供用户规模数据。</p>
+      </div>
+
+      <div class="card">
+        <h3>检索与复习自测（2026-10-28）</h3>
+        <div class="stat-grid" style="margin-top:14px">
+          <div class="stat"><p class="stat-value">27</p><p class="stat-label">示例笔记</p><p class="stat-hint">data/samples 目录，含 front-matter</p></div>
+          <div class="stat"><p class="stat-value">62</p><p class="stat-label">chunks</p><p class="stat-hint">平均每篇约 2.3 段</p></div>
+          <div class="stat"><p class="stat-value">138.6 ms</p><p class="stat-label">平均检索耗时</p><p class="stat-hint">5 次查询均值</p></div>
+          <div class="stat"><p class="stat-value">363 ms</p><p class="stat-label">首次查询耗时</p><p class="stat-hint">含 BGE ONNX 模型预热</p></div>
+        </div>
+        <ul style="margin-top:14px;padding-left:20px;list-style:disc;color:var(--ink2);font-size:.92rem">
+          <li>5 次查询覆盖：关键词检索、换说法语义检索、结构化过滤（course / topic）</li>
+          <li>检索日志中 <code class="cmd-inline">used_vector</code> 与 <code class="cmd-inline">used_fulltext</code> 均为 1，证明每次查询都走了混合检索路径</li>
+          <li>复习闭环实测：加入后 <code class="cmd-inline">/api/review/due</code> 返回 1 条，评分 grade=2 后 <code class="cmd-inline">interval_days=1</code>、<code class="cmd-inline">ease=2.52</code>、due_at 推后 1 天</li>
+          <li>嵌入模式：<code class="cmd-inline">onnx</code>，模型 <code class="cmd-inline">BAAI/bge-small-zh-v1.5</code>，维度 512；Docker 容器路径同样验证通过</li>
+          <li>降级验证：切换 <code class="cmd-inline">EMBED_MODE=hash</code> 后关键词检索仍可用，语义召回变弱（符合预期，<code class="cmd-inline">/api/health</code> 中 <code class="cmd-inline">embed.degraded</code> 会标记）</li>
+        </ul>
       </div>
     </div>
   </section>
