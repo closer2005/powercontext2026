@@ -60,6 +60,8 @@ seekdb 只负责**存储**和**在库内完成向量 + 全文混合检索**（`h
 
 ### 3.2 启动 seekdb
 
+在**仓库根目录**执行：
+
 ```bash
 cd stepfun
 docker compose up -d          # 等价于 docker run -d --name seekdb-stepfun -p 2881:2881 oceanbase/seekdb
@@ -73,8 +75,11 @@ mysql -h127.0.0.1 -P2881 -uroot -e "SELECT VERSION();"
 ```
 
 > 默认使用 `test` 数据库；如需其他库，设置 `SEEKDB_DATABASE`（并先自行建库）。
+> 若你当前已经在 `stepfun` 目录里，下面 3.3 的 `cd stepfun/app` 请改成 `cd app`。
 
 ### 3.3 安装依赖并启动应用
+
+另开终端，在**仓库根目录**执行：
 
 ```bash
 cd stepfun/app
@@ -188,7 +193,7 @@ stepfun/
 
 ```bash
 cd stepfun/app
-npm start &                        # http://127.0.0.1:3000
+npm start                          # 另开终端或后台运行，http://127.0.0.1:3000
 # 浏览器打开页面，点「运行基准评测」（约 1~2 分钟）
 # 结果保存为 results/bench-<config>.json 与 results/bench-summary.json
 # 重复运行后聚合：
