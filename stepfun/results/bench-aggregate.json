@@ -1,0 +1,282 @@
+{
+  "generatedAt": "2026-10-27T19:46:42.439Z",
+  "runs": [
+    {
+      "file": "raw-bench-run-D.json",
+      "startedAt": "2026-10-27T19:38:39.055Z",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0"
+    },
+    {
+      "file": "raw-bench-run-E.json",
+      "startedAt": "2026-10-27T19:40:23.591Z",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0"
+    },
+    {
+      "file": "raw-bench-run-F.json",
+      "startedAt": "2026-10-27T19:42:02.278Z",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0"
+    },
+    {
+      "file": "raw-bench-run-G.json",
+      "startedAt": "2026-10-27T19:44:40.827Z",
+      "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0"
+    }
+  ],
+  "environment": {
+    "startedAt": "2026-10-27T19:38:39.055Z",
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+    "platform": "Windows",
+    "hardwareConcurrency": 18,
+    "webgpu": {
+      "available": true,
+      "f16": true,
+      "reason": ""
+    },
+    "model": {
+      "id": "Xenova/bge-small-zh-v1.5",
+      "dimension": 512
+    },
+    "corpus": {
+      "docs": 64,
+      "queries": 24
+    },
+    "modelFileBytes": {
+      "fp32": 95401750,
+      "fp16": 48047300,
+      "q8": 24560715
+    },
+    "configs": [
+      "fp32_wasm",
+      "int8_wasm",
+      "fp16_webgpu"
+    ],
+    "cacheCleared": true
+  },
+  "note": "每个配置在每轮中重复 3 次语料向量化取中位数；跨轮结果取中位数。质量指标在各轮完全一致。",
+  "configs": {
+    "fp32_wasm": {
+      "label": "fp32 + WASM（基线）",
+      "device": "wasm",
+      "dtype": "fp32",
+      "fallback": false,
+      "modelBytes": 95401750,
+      "modelMB": 90.982,
+      "runs": 4,
+      "loadMs": 3216.2,
+      "warmLoadMs": 508.7,
+      "embedMs": 5355.9,
+      "docsPerSec": 11.95,
+      "writeMs": 2654.6,
+      "refreshMs": 592.7,
+      "queryEmbedP50": 39.2,
+      "queryEmbedP95": 55.3,
+      "hybridP50": 50.8,
+      "hybridP95": 132.5,
+      "e2eP50": 94.4,
+      "e2eP95": 182.8,
+      "queryBatchMs": 874.2,
+      "queryBatchPerItemMs": 36.4,
+      "quality": {
+        "hybridRecall5": 0.972,
+        "hybridRecall10": 0.972,
+        "hybridNdcg10": 0.943,
+        "vectorRecall5": 0.917,
+        "vectorRecall10": 0.972,
+        "vectorNdcg10": 0.938
+      },
+      "incrementalFoundAfterRefresh": true,
+      "perRun": {
+        "raw-bench-run-D.json": {
+          "docsPerSec": 11.963,
+          "loadMs": 3448.3,
+          "writeMs": 2179.6,
+          "refreshMs": 541.2,
+          "hybridP50": 55.3,
+          "e2eP50": 96.6
+        },
+        "raw-bench-run-E.json": {
+          "docsPerSec": 11.936,
+          "loadMs": 3781.6,
+          "writeMs": 4542.9,
+          "refreshMs": 777,
+          "hybridP50": 139.9,
+          "e2eP50": 182.8
+        },
+        "raw-bench-run-F.json": {
+          "docsPerSec": 11.733,
+          "loadMs": 2984,
+          "writeMs": 2028.6,
+          "refreshMs": 529.9,
+          "hybridP50": 27.1,
+          "e2eP50": 62.6
+        },
+        "raw-bench-run-G.json": {
+          "docsPerSec": 12.597,
+          "loadMs": 2726.8,
+          "writeMs": 3129.7,
+          "refreshMs": 644.1,
+          "hybridP50": 46.4,
+          "e2eP50": 92.2
+        }
+      }
+    },
+    "int8_wasm": {
+      "label": "INT8(q8) + WASM",
+      "device": "wasm",
+      "dtype": "q8",
+      "fallback": false,
+      "modelBytes": 24560715,
+      "modelMB": 23.423,
+      "runs": 4,
+      "loadMs": 704.1,
+      "warmLoadMs": 212.4,
+      "embedMs": 3877.9,
+      "docsPerSec": 16.514,
+      "writeMs": 3183.2,
+      "refreshMs": 807.1,
+      "queryEmbedP50": 25.9,
+      "queryEmbedP95": 50.5,
+      "hybridP50": 37.6,
+      "hybridP95": 95.2,
+      "e2eP50": 65.1,
+      "e2eP95": 136.3,
+      "queryBatchMs": 572.1,
+      "queryBatchPerItemMs": 23.8,
+      "quality": {
+        "hybridRecall5": 0.951,
+        "hybridRecall10": 0.972,
+        "hybridNdcg10": 0.941,
+        "vectorRecall5": 0.917,
+        "vectorRecall10": 0.972,
+        "vectorNdcg10": 0.938
+      },
+      "incrementalFoundAfterRefresh": true,
+      "perRun": {
+        "raw-bench-run-D.json": {
+          "docsPerSec": 16.908,
+          "loadMs": 861.8,
+          "writeMs": 5187.5,
+          "refreshMs": 509.9,
+          "hybridP50": 43.4,
+          "e2eP50": 65.1
+        },
+        "raw-bench-run-E.json": {
+          "docsPerSec": 10.545,
+          "loadMs": 794.5,
+          "writeMs": 1178.9,
+          "refreshMs": 806.7,
+          "hybridP50": 26.2,
+          "e2eP50": 65
+        },
+        "raw-bench-run-F.json": {
+          "docsPerSec": 17.214,
+          "loadMs": 318.2,
+          "writeMs": 1017.7,
+          "refreshMs": 807.4,
+          "hybridP50": 31.7,
+          "e2eP50": 55.8
+        },
+        "raw-bench-run-G.json": {
+          "docsPerSec": 16.119,
+          "loadMs": 613.7,
+          "writeMs": 9601.4,
+          "refreshMs": 885.3,
+          "hybridP50": 52.4,
+          "e2eP50": 76.4
+        }
+      }
+    },
+    "fp16_webgpu": {
+      "label": "FP16 + WebGPU",
+      "device": "webgpu",
+      "dtype": "fp16",
+      "fallback": false,
+      "modelBytes": 48047300,
+      "modelMB": 45.821,
+      "runs": 4,
+      "loadMs": 1710.2,
+      "warmLoadMs": 441.8,
+      "embedMs": 902.2,
+      "docsPerSec": 70.952,
+      "writeMs": 2018.4,
+      "refreshMs": 527.5,
+      "queryEmbedP50": 52.9,
+      "queryEmbedP95": 115.7,
+      "hybridP50": 44.9,
+      "hybridP95": 83.6,
+      "e2eP50": 102.2,
+      "e2eP95": 213.4,
+      "queryBatchMs": 106.9,
+      "queryBatchPerItemMs": 4.5,
+      "quality": {
+        "hybridRecall5": 0.972,
+        "hybridRecall10": 0.972,
+        "hybridNdcg10": 0.943,
+        "vectorRecall5": 0.917,
+        "vectorRecall10": 0.972,
+        "vectorNdcg10": 0.938
+      },
+      "incrementalFoundAfterRefresh": true,
+      "perRun": {
+        "raw-bench-run-D.json": {
+          "docsPerSec": 74.845,
+          "loadMs": 1810.3,
+          "writeMs": 4434.5,
+          "refreshMs": 531.7,
+          "hybridP50": 48.4,
+          "e2eP50": 94.7
+        },
+        "raw-bench-run-E.json": {
+          "docsPerSec": 34.034,
+          "loadMs": 1863.6,
+          "writeMs": 1439.1,
+          "refreshMs": 508.1,
+          "hybridP50": 48.9,
+          "e2eP50": 112.3
+        },
+        "raw-bench-run-F.json": {
+          "docsPerSec": 70.083,
+          "loadMs": 1173.7,
+          "writeMs": 1051.1,
+          "refreshMs": 607,
+          "hybridP50": 38.4,
+          "e2eP50": 109.7
+        },
+        "raw-bench-run-G.json": {
+          "docsPerSec": 71.821,
+          "loadMs": 1610.1,
+          "writeMs": 2597.6,
+          "refreshMs": 523.3,
+          "hybridP50": 41.4,
+          "e2eP50": 71.5
+        }
+      }
+    }
+  },
+  "comparisonVsFp32": {
+    "fp32_wasm": {
+      "compressionRatio": 1,
+      "embedSpeedup": 1,
+      "warmLoadSpeedup": 1,
+      "hybridRecall5Delta": 0,
+      "hybridRecall10Delta": 0,
+      "hybridNdcg10Delta": 0
+    },
+    "int8_wasm": {
+      "compressionRatio": 3.884,
+      "embedSpeedup": 1.382,
+      "warmLoadSpeedup": 2.395,
+      "hybridRecall5Delta": -0.021,
+      "hybridRecall10Delta": 0,
+      "hybridNdcg10Delta": -0.002
+    },
+    "fp16_webgpu": {
+      "compressionRatio": 1.986,
+      "embedSpeedup": 5.937,
+      "warmLoadSpeedup": 1.151,
+      "hybridRecall5Delta": 0,
+      "hybridRecall10Delta": 0,
+      "hybridNdcg10Delta": 0
+    }
+  }
+}

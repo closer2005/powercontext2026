@@ -1,0 +1,491 @@
+{
+  "config": "int8_wasm",
+  "label": "INT8(q8) + WASM",
+  "ok": true,
+  "loadMs": 293.7,
+  "device": "wasm",
+  "dtype": "q8",
+  "fallback": false,
+  "fallbackReason": "",
+  "modelBytes": 24560715,
+  "kbId": "mvr3vmc0_82k8j",
+  "embedMsRuns": [
+    3341.5,
+    3380,
+    3337.6
+  ],
+  "embedMs": 3341.5,
+  "embedBatchSize": 8,
+  "docsPerSec": 19.153,
+  "writeMs": 741.9,
+  "refreshMs": 606,
+  "ingestTotalMs": 1352.8,
+  "count": 64,
+  "firstQueryEmbedMs": 17.5,
+  "firstQueryEndToEndMs": 52.7,
+  "latencyMs": {
+    "queryEmbedP50": 17.6,
+    "queryEmbedP95": 26.2,
+    "hybridP50": 16.6,
+    "hybridP95": 23.1,
+    "vectorP50": 7.2,
+    "vectorP95": 10.9,
+    "e2eP50": 35.3,
+    "e2eP95": 46.9
+  },
+  "queryBatchMs": 550.6,
+  "queryBatchPerItemMs": 22.9,
+  "quality": {
+    "hybrid": {
+      "recall5": 0.951,
+      "recall10": 0.972,
+      "ndcg10": 0.941
+    },
+    "vector": {
+      "recall5": 0.917,
+      "recall10": 0.972,
+      "ndcg10": 0.938
+    }
+  },
+  "perQuery": [
+    {
+      "id": "q01",
+      "query": "西湖附近安静适合看书的咖啡馆",
+      "hybridTop5": [
+        "doc_009",
+        "doc_011",
+        "doc_015",
+        "doc_058",
+        "doc_016"
+      ],
+      "vectorTop5": [
+        "doc_011",
+        "doc_009",
+        "doc_058",
+        "doc_015",
+        "doc_016"
+      ]
+    },
+    {
+      "id": "q02",
+      "query": "杭州适合爬山看日落的地方",
+      "hybridTop5": [
+        "doc_003",
+        "doc_047",
+        "doc_042",
+        "doc_001",
+        "doc_007"
+      ],
+      "vectorTop5": [
+        "doc_003",
+        "doc_047",
+        "doc_042",
+        "doc_007",
+        "doc_001"
+      ]
+    },
+    {
+      "id": "q03",
+      "query": "seekdb 怎么实现向量和全文混合检索",
+      "hybridTop5": [
+        "doc_017",
+        "doc_020",
+        "doc_022",
+        "doc_019",
+        "doc_018"
+      ],
+      "vectorTop5": [
+        "doc_017",
+        "doc_020",
+        "doc_022",
+        "doc_018",
+        "doc_019"
+      ]
+    },
+    {
+      "id": "q04",
+      "query": "浏览器里怎么用 WebGPU 跑 embedding 模型",
+      "hybridTop5": [
+        "doc_025",
+        "doc_029",
+        "doc_027",
+        "doc_023",
+        "doc_050"
+      ],
+      "vectorTop5": [
+        "doc_025",
+        "doc_050",
+        "doc_051",
+        "doc_032",
+        "doc_023"
+      ]
+    },
+    {
+      "id": "q05",
+      "query": "INT8 量化后模型体积能压缩多少",
+      "hybridTop5": [
+        "doc_028",
+        "doc_029",
+        "doc_027",
+        "doc_025",
+        "doc_031"
+      ],
+      "vectorTop5": [
+        "doc_028",
+        "doc_029",
+        "doc_030",
+        "doc_023",
+        "doc_052"
+      ]
+    },
+    {
+      "id": "q06",
+      "query": "想找一家可以带狗去的咖啡店",
+      "hybridTop5": [
+        "doc_013",
+        "doc_011",
+        "doc_037",
+        "doc_010",
+        "doc_015"
+      ],
+      "vectorTop5": [
+        "doc_013",
+        "doc_011",
+        "doc_010",
+        "doc_016",
+        "doc_009"
+      ]
+    },
+    {
+      "id": "q07",
+      "query": "晚上加班想喝咖啡，哪里有二十四小时营业的店",
+      "hybridTop5": [
+        "doc_015",
+        "doc_045",
+        "doc_011",
+        "doc_009",
+        "doc_062"
+      ],
+      "vectorTop5": [
+        "doc_015",
+        "doc_010",
+        "doc_011",
+        "doc_045",
+        "doc_009"
+      ]
+    },
+    {
+      "id": "q08",
+      "query": "灵隐寺附近有什么景点可以一起逛",
+      "hybridTop5": [
+        "doc_003",
+        "doc_005",
+        "doc_002",
+        "doc_006",
+        "doc_037"
+      ],
+      "vectorTop5": [
+        "doc_002",
+        "doc_003",
+        "doc_006",
+        "doc_001",
+        "doc_005"
+      ]
+    },
+    {
+      "id": "q09",
+      "query": "杭州周末骑行路线推荐",
+      "hybridTop5": [
+        "doc_042",
+        "doc_003",
+        "doc_005",
+        "doc_001",
+        "doc_047"
+      ],
+      "vectorTop5": [
+        "doc_042",
+        "doc_003",
+        "doc_001",
+        "doc_005",
+        "doc_041"
+      ]
+    },
+    {
+      "id": "q10",
+      "query": "React 里怎么管理全局状态",
+      "hybridTop5": [
+        "doc_051",
+        "doc_024",
+        "doc_018",
+        "doc_025",
+        "doc_019"
+      ],
+      "vectorTop5": [
+        "doc_051",
+        "doc_049",
+        "doc_018",
+        "doc_063",
+        "doc_024"
+      ]
+    },
+    {
+      "id": "q11",
+      "query": "Node.js 里怎么跑单元测试",
+      "hybridTop5": [
+        "doc_055",
+        "doc_024",
+        "doc_050",
+        "doc_025",
+        "doc_051"
+      ],
+      "vectorTop5": [
+        "doc_055",
+        "doc_049",
+        "doc_020",
+        "doc_024",
+        "doc_026"
+      ]
+    },
+    {
+      "id": "q12",
+      "query": "seekdb 的 HNSW 索引参数怎么调",
+      "hybridTop5": [
+        "doc_022",
+        "doc_019",
+        "doc_020",
+        "doc_018",
+        "doc_024"
+      ],
+      "vectorTop5": [
+        "doc_022",
+        "doc_020",
+        "doc_019",
+        "doc_018",
+        "doc_017"
+      ]
+    },
+    {
+      "id": "q13",
+      "query": "推荐一家适合带长辈吃饭的素食餐厅",
+      "hybridTop5": [
+        "doc_038",
+        "doc_046",
+        "doc_012",
+        "doc_009",
+        "doc_058"
+      ],
+      "vectorTop5": [
+        "doc_038",
+        "doc_033",
+        "doc_037",
+        "doc_034",
+        "doc_016"
+      ]
+    },
+    {
+      "id": "q14",
+      "query": "西湖玩一整天怎么安排",
+      "hybridTop5": [
+        "doc_041",
+        "doc_001",
+        "doc_007",
+        "doc_009",
+        "doc_033"
+      ],
+      "vectorTop5": [
+        "doc_001",
+        "doc_041",
+        "doc_004",
+        "doc_009",
+        "doc_033"
+      ]
+    },
+    {
+      "id": "q15",
+      "query": "想练英语听力，有什么练习方法",
+      "hybridTop5": [
+        "doc_060",
+        "doc_063",
+        "doc_044",
+        "doc_057",
+        "doc_058"
+      ],
+      "vectorTop5": [
+        "doc_060",
+        "doc_063",
+        "doc_011",
+        "doc_061",
+        "doc_046"
+      ]
+    },
+    {
+      "id": "q16",
+      "query": "考研复习怎么安排时间和复盘",
+      "hybridTop5": [
+        "doc_059",
+        "doc_062",
+        "doc_010",
+        "doc_064",
+        "doc_061"
+      ],
+      "vectorTop5": [
+        "doc_059",
+        "doc_062",
+        "doc_058",
+        "doc_057",
+        "doc_063"
+      ]
+    },
+    {
+      "id": "q17",
+      "query": "seekdb 向量维度要和模型一致吗",
+      "hybridTop5": [
+        "doc_023",
+        "doc_017",
+        "doc_020",
+        "doc_022",
+        "doc_028"
+      ],
+      "vectorTop5": [
+        "doc_023",
+        "doc_017",
+        "doc_020",
+        "doc_022",
+        "doc_019"
+      ]
+    },
+    {
+      "id": "q18",
+      "query": "周末想打羽毛球，场地怎么预约",
+      "hybridTop5": [
+        "doc_043",
+        "doc_048",
+        "doc_057",
+        "doc_036",
+        "doc_011"
+      ],
+      "vectorTop5": [
+        "doc_043",
+        "doc_048",
+        "doc_057",
+        "doc_036",
+        "doc_044"
+      ]
+    },
+    {
+      "id": "q19",
+      "query": "深夜里想吃小龙虾和烤串",
+      "hybridTop5": [
+        "doc_039",
+        "doc_016",
+        "doc_012",
+        "doc_040",
+        "doc_041"
+      ],
+      "vectorTop5": [
+        "doc_039",
+        "doc_015",
+        "doc_016",
+        "doc_037",
+        "doc_005"
+      ]
+    },
+    {
+      "id": "q20",
+      "query": "模型第二次打开还要重新下载吗",
+      "hybridTop5": [
+        "doc_032",
+        "doc_025",
+        "doc_027",
+        "doc_028",
+        "doc_031"
+      ],
+      "vectorTop5": [
+        "doc_032",
+        "doc_025",
+        "doc_027",
+        "doc_064",
+        "doc_022"
+      ]
+    },
+    {
+      "id": "q21",
+      "query": "WebGPU 不可用时怎么降级",
+      "hybridTop5": [
+        "doc_027",
+        "doc_026",
+        "doc_032",
+        "doc_029",
+        "doc_024"
+      ],
+      "vectorTop5": [
+        "doc_027",
+        "doc_032",
+        "doc_026",
+        "doc_024",
+        "doc_018"
+      ]
+    },
+    {
+      "id": "q22",
+      "query": "西溪湿地有什么好玩的",
+      "hybridTop5": [
+        "doc_004",
+        "doc_047",
+        "doc_008",
+        "doc_005",
+        "doc_041"
+      ],
+      "vectorTop5": [
+        "doc_004",
+        "doc_001",
+        "doc_008",
+        "doc_047",
+        "doc_042"
+      ]
+    },
+    {
+      "id": "q23",
+      "query": "读论文有什么方法",
+      "hybridTop5": [
+        "doc_064",
+        "doc_012",
+        "doc_054",
+        "doc_061",
+        "doc_024"
+      ],
+      "vectorTop5": [
+        "doc_064",
+        "doc_061",
+        "doc_024",
+        "doc_011",
+        "doc_059"
+      ]
+    },
+    {
+      "id": "q24",
+      "query": "前端性能怎么用 DevTools 分析",
+      "hybridTop5": [
+        "doc_056",
+        "doc_055",
+        "doc_026",
+        "doc_053",
+        "doc_051"
+      ],
+      "vectorTop5": [
+        "doc_056",
+        "doc_026",
+        "doc_055",
+        "doc_027",
+        "doc_020"
+      ]
+    }
+  ],
+  "incremental": {
+    "added": 2,
+    "refreshMs": 503.8,
+    "foundAfterRefresh": true,
+    "totalCount": 66
+  },
+  "warmLoadMs": 144.7
+}

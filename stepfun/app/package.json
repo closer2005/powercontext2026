@@ -1,0 +1,23 @@
+﻿{
+  "name": "stepfun-ondevice-kb",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "On-device embedding + seekdb hybrid retrieval demo (2026 database competition, StepFun track)",
+  "scripts": {
+    "start": "node server.mjs",
+    "smoke": "node smoke.mjs",
+    "fetch-model": "node scripts/fetch-model.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.8.1",
+    "express": "5.3.0",
+    "seekdb": "1.4.0"
+  },
+  "overrides": {
+    "@seekdb/default-embed": "1.2.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,15 @@
+services:
+  seekdb:
+    image: oceanbase/seekdb
+    container_name: seekdb-stepfun
+    ports:
+      - "2881:2881"
+    volumes:
+      - seekdb-data:/var/lib/seekdb
+      - ./docker/init:/root/boot/init.d:ro
+    environment:
+      INIT_SCRIPTS_PATH: /root/boot/init.d
+    restart: unless-stopped
+
+volumes:
+  seekdb-data:

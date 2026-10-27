@@ -1,0 +1,73 @@
+{
+  "startedAt": "2026-10-27T19:17:51.955Z",
+  "steps": [
+    {
+      "step": "explicit-webgpu-fallback",
+      "result": {
+        "requested": "fp16_webgpu",
+        "device": "wasm",
+        "dtype": "q8",
+        "fallback": true,
+        "fallbackReason": "WebGPU/FP16 初始化失败，自动降级 WASM/INT8：The device (webgpu) does not support fp16."
+      }
+    },
+    {
+      "step": "kb-isolation",
+      "result": {
+        "kbA": {
+          "id": "mvr2ij7u_512qs",
+          "name": "验证A-杭州景点",
+          "count": 3
+        },
+        "kbB": {
+          "id": "mvr2ik5s_4imb6",
+          "name": "验证B-端侧推理",
+          "count": 3
+        },
+        "query": "杭州适合爬山看日落的地方",
+        "topA": [
+          "1vha4md_2",
+          "q16yxf_0",
+          "8mv545_1"
+        ],
+        "topB": [
+          "yahu2e_0",
+          "jznadt_1",
+          "18ca7cm_2"
+        ],
+        "topA2": [
+          "1vha4md_2",
+          "q16yxf_0",
+          "8mv545_1"
+        ],
+        "sameAfterSwitchBack": true,
+        "disjointAB": true
+      }
+    },
+    {
+      "step": "incremental-write",
+      "result": {
+        "beforeTop": [
+          "vlicju_0"
+        ],
+        "afterTop": [
+          "19ojuif_0",
+          "vlicju_0"
+        ],
+        "foundAfterRefresh": true,
+        "countAfterIncremental": 2,
+        "refreshMsInImport": 503.9
+      }
+    }
+  ],
+  "gpuDetection": {
+    "available": false,
+    "f16": false,
+    "reason": "navigator.gpu 不存在"
+  },
+  "seekdbBadge": "seekdb 5.7.25-OceanBase seekdb-v1.4.0.0 · 3 个集合",
+  "backendBadgeBefore": "WebGPU 不可用（navigator.gpu 不存在），将使用 WASM/INT8",
+  "backendBadgeAfter": "后端 WASM · q8",
+  "modelStatus": "已加载，但发生自动降级：WebGPU/FP16 初始化失败，自动降级 WASM/INT8：The device (webgpu) does not support fp16.",
+  "doneAt": "2026-10-27T19:17:58.165Z"
+}

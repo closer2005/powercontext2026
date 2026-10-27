@@ -1,0 +1,24 @@
+# dependencies
+app/node_modules/
+
+# local model files (~160 MB) — fetch with: node scripts/fetch-model.mjs
+app/public/models/
+
+# runtime state
+app/storage/
+app/.npmtest/
+app/public/*.log
+
+# local automation / debugging scripts (not part of the deliverable)
+app/_*.mjs
+app/_*.py
+_npmtest/
+
+# python cache
+__pycache__/
+*.pyc
+
+# misc
+*.part
+npm-debug.log*
+.DS_Store

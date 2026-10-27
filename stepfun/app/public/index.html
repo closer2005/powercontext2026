@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>端侧 AI 推理 × seekdb 混合检索</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">◆</div>
+      <div>
+        <h1>端侧 AI 推理 × seekdb 混合检索</h1>
+        <p class="sub">浏览器本地 embedding（WebGPU / WASM）→ seekdb <code>hybridSearch</code>（向量 + 全文，RRF 融合）</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span id="badge-seekdb" class="badge badge-muted">seekdb 检测中…</span>
+      <span id="badge-backend" class="badge badge-muted">模型未加载</span>
+      <span class="badge">bge-small-zh · 512 维</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 模型 -->
+    <section class="card" id="model-card">
+      <div class="card-head">
+        <h2><span class="step">1</span>端侧模型</h2>
+        <div class="row-inline">
+          <label class="field">
+            <span>推理后端</span>
+            <select id="model-config">
+              <option value="auto">自动（优先 WebGPU/FP16）</option>
+              <option value="fp16_webgpu">FP16 + WebGPU</option>
+              <option value="int8_wasm">INT8(q8) + WASM</option>
+              <option value="fp32_wasm">fp32 + WASM（基线）</option>
+            </select>
+          </label>
+          <button id="btn-load-model" class="btn btn-primary">加载模型</button>
+        </div>
+      </div>
+      <div class="progress"><div id="model-progress-bar" class="progress-bar" style="width:0%"></div></div>
+      <div id="model-status" class="status">尚未加载模型。首次加载会从本地 <code>public/models</code> 读取模型文件（缺失时回退 hf-mirror）。</div>
+      <div class="kv" id="model-kv"></div>
+    </section>
+
+    <!-- 知识库 -->
+    <section class="card" id="kb-card">
+      <div class="card-head">
+        <h2><span class="step">2</span>知识库</h2>
+        <div class="row-inline">
+          <label class="field">
+            <span>当前知识库</span>
+            <select id="kb-select"><option value="">（尚未创建）</option></select>
+          </label>
+          <input id="kb-name" class="input" placeholder="新知识库名称，例如：杭州生活指南" />
+          <button id="btn-create-kb" class="btn">新建</button>
+          <button id="btn-delete-kb" class="btn btn-ghost">删除当前</button>
+        </div>
+      </div>
+      <div id="kb-status" class="status">每个知识库在 seekdb 中对应一个独立集合（全文 ik 索引 + HNSW 向量索引）。</div>
+    </section>
+
+    <!-- 导入 -->
+    <section class="card" id="import-card">
+      <div class="card-head">
+        <h2><span class="step">3</span>导入文本文档 → 浏览器向量化 → 写入 seekdb</h2>
+        <div class="row-inline">
+          <label class="field">
+            <span>批大小</span>
+            <select id="batch-size">
+              <option value="1">1</option>
+              <option value="8" selected>8</option>
+              <option value="16">16</option>
+              <option value="32">32</option>
+            </select>
+          </label>
+          <label class="btn btn-ghost file-btn">选择 .txt / .md<input id="file-input" type="file" accept=".txt,.md,text/plain,text/markdown" multiple hidden /></label>
+          <button id="btn-sample" class="btn">载入示例语料（12 篇）</button>
+          <button id="btn-clear-text" class="btn btn-ghost">清空</button>
+          <button id="btn-import" class="btn btn-primary">导入并向量化</button>
+        </div>
+      </div>
+      <textarea id="import-text" class="textarea" rows="5" placeholder="也可以直接粘贴文本；空行分隔多个文档…"></textarea>
+      <div class="progress"><div id="import-progress-bar" class="progress-bar" style="width:0%"></div></div>
+      <div id="import-status" class="status">尚未导入。</div>
+      <div id="import-timings" class="kv"></div>
+    </section>
+
+    <!-- 检索 -->
+    <section class="card" id="search-card">
+      <div class="card-head">
+        <h2><span class="step">4</span>混合检索（seekdb 内完成向量 + 全文 RRF）</h2>
+        <div class="row-inline">
+          <label class="field">
+            <span>返回条数</span>
+            <select id="topk">
+              <option>3</option><option selected>5</option><option>10</option>
+            </select>
+          </label>
+          <button id="btn-search" class="btn btn-primary">检索</button>
+        </div>
+      </div>
+      <div class="row-inline search-row">
+        <input id="query" class="input input-lg" value="西湖附近安静适合看书的咖啡馆" placeholder="输入一句话需求…" />
+      </div>
+      <div id="search-status" class="status">查询向量在浏览器本地计算，检索由 seekdb 的 hybridSearch 一次完成。</div>
+      <div id="search-timings" class="kv"></div>
+      <ol id="results" class="results"></ol>
+    </section>
+
+    <!-- 评测 -->
+    <section class="card" id="bench-card">
+      <div class="card-head">
+        <h2><span class="step">5</span>量化 × 后端 基准评测（fp32 / INT8 / FP16）</h2>
+        <div class="row-inline">
+          <button id="btn-bench" class="btn btn-primary">运行基准评测</button>
+          <button id="btn-bench-clear" class="btn btn-ghost">清空日志</button>
+        </div>
+      </div>
+      <p class="hint">固定语料 64 篇 + 24 条查询（自带相关性标注），依次测 fp32/WASM、INT8/WASM、FP16/WebGPU，并验证 WebGPU 不可用时的自动降级。结果写入 <code>results/</code>。</p>
+      <div class="progress"><div id="bench-progress-bar" class="progress-bar" style="width:0%"></div></div>
+      <div id="bench-status" class="status">尚未运行。</div>
+      <div class="table-wrap"><table id="bench-table" class="table"></table></div>
+      <pre id="bench-log" class="log"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <span>本地推理：Transformers.js 3.8 + ONNX Runtime Web · 存储/检索：seekdb 1.4 + seekdb-js</span>
+    <span>|</span>
+    <a href="https://docs.seekdb.ai/seekdb/hybrid-search-of-seekdb-js/" target="_blank" rel="noreferrer">seekdb hybridSearch 文档</a>
+  </footer>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
