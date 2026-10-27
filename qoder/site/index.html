@@ -366,7 +366,7 @@ cd powercontext2026/qoder</code></pre>
           <div>
             <h3>确认初始数据</h3>
             <pre class="code"><code>curl -s http://localhost:8000/api/stats</code></pre>
-            <p class="step-out">预期：<strong>notes = 24</strong>、<strong>chunks = 96</strong>（示例数据规模，以实际返回为准）。</p>
+            <p class="step-out">预期：<strong>notes = 27</strong>、<strong>chunks = 62</strong>（本机实测；随切块参数浮动，验收要求 chunks ≥ 60）。</p>
           </div>
         </div>
         <div class="step">
@@ -382,7 +382,7 @@ cd powercontext2026/qoder</code></pre>
           <span class="step-num" aria-hidden="true">3</span>
           <div>
             <h3>预期结果</h3>
-            <p>返回包含《数据库系统概论 · 第 7 章》相关片段；<code class="cmd-inline">matched_by</code> 同时含 vector 与 fulltext，<code class="cmd-inline">took_ms</code> 有值，每条结果都带 title 与 seq（第 N 段）。</p>
+            <p>返回包含《MVCC 版本链与 Read View》《事务隔离级别与 MVCC》等数据库课程片段；<code class="cmd-inline">matched_by</code> 同时含 vector 与 fulltext，<code class="cmd-inline">took_ms</code> 有值，每条结果都带 title 与 seq（第 N 段）。</p>
             <p class="step-out">若结果为空：先确认已载入示例数据，再放宽课程 / 主题筛选或换用同义说法。</p>
           </div>
         </div>
@@ -404,9 +404,37 @@ cd powercontext2026/qoder</code></pre>
     </div>
   </section>
 
+<!-- 10 · 提交材料清单 -->
+  <section class="section section-alt" id="materials">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-kicker">Materials · 提交材料</p>
+        <h2 class="section-title">评审所需材料索引</h2>
+        <p class="section-sub">按赛题「四、提交材料」逐项对照；每项都能在本页或代码仓库中直接核对。</p>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head"><h3>材料对照表</h3><p class="table-note">题目 600078 · Qoder 赛题</p></div>
+        <div class="table-scroll">
+          <table>
+            <caption class="sr-only">提交材料索引：材料、位置与核对方式</caption>
+            <thead><tr><th scope="col">材料</th><th scope="col">位置</th><th scope="col">核对方式</th></tr></thead>
+            <tbody>
+              <tr><td>项目网站网址</td><td><a href="https://citeseek-gzqd7ingk4d.qoder.zone" target="_blank" rel="noopener">citeseek-gzqd7ingk4d.qoder.zone</a></td><td>本页即 Qoder Sites 发布站点，未登录可直接访问；可见范围 public</td></tr>
+              <tr><td>代码仓库</td><td><a href="https://github.com/closer2005/powercontext2026/tree/2026-competition-ecosystem/qoder" target="_blank" rel="noopener">powercontext2026 · qoder/</a></td><td>公开仓库，含 app/ web/ data/ tests/ docs/ site/ 全量源码</td></tr>
+              <tr><td>运行说明</td><td><a href="#run">本页「运行说明」</a> / <code class="cmd-inline">docs/RUNBOOK.md</code></td><td><code class="cmd-inline">docker compose up -d --build</code> → 打开 <code class="cmd-inline">localhost:8000</code></td></tr>
+              <tr><td>验证样例</td><td><a href="#verify">本页「验证样例」</a> / <code class="cmd-inline">docs/VERIFY.md</code></td><td>3 组样例均给出 curl、预期字段与 seekdb 证据</td></tr>
+              <tr><td>Qoder 开发记录</td><td><a href="#build">本页「开发记录」</a> / <code class="cmd-inline">docs/QODER_DEV_RECORD.md</code></td><td>2 个真实会话、104 次请求、60 Credits；账号与 UID 见开发记录区</td></tr>
+              <tr><td>技术证据</td><td><a href="#evidence">本页「技术证据」</a> / <code class="cmd-inline">/api/logs/search</code></td><td>search_log 含 query/耗时/结果数/向量与全文命中；collection 62 条</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
-<!-- 10 · 页脚：参赛信息与材料说明 -->
+<!-- 11 · 页脚：参赛信息与材料说明 -->
 <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
