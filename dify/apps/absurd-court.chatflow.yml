@@ -1,0 +1,109 @@
+app:
+  description: 离谱法庭 · The Absurd Court —— 用 Dify + OceanBase seekdb 做的荒诞庭审小游戏
+  icon: ⚖️
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: 离谱法庭 · The Absurd Court
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.3.1
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: '本庭已开庭。请陈述你的诉讼请求：起诉谁、什么罪名、你有什么诉求。'
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 我要起诉我家的充电线，罪名是通敌
+    - 我要起诉周一，罪名是恶意循环
+    - 怎么玩
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - id: start-llm
+      source: start
+      sourceHandle: source
+      target: llm
+      targetHandle: target
+    - id: llm-answer
+      source: llm
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+    nodes:
+    - data:
+        desc: ''
+        title: Start
+        type: start
+        variables: []
+      id: start
+      position:
+        x: 80
+        y: 282
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.9
+          mode: chat
+          name: qwen2.5-3b-instruct
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+        prompt_template:
+        - role: system
+          text: '你是「离谱法庭」的法官包青天2.0，用中文主持一场荒诞但无害的庭审。玩家可以起诉任何物品或抽象概念，你要一本正经地开庭、让被告（物件成精）狡辩，并给出搞笑判决。不得进行人身攻击、歧视或任何违法违规内容。'
+        - role: user
+          text: '{{#sys.query#}}'
+        selected: true
+        title: 开庭
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      id: llm
+      position:
+        x: 380
+        y: 282
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+    - data:
+        answer: '{{#llm.text#}}'
+        desc: ''
+        title: Answer
+        type: answer
+        variables: []
+      id: answer
+      position:
+        x: 680
+        y: 282
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.7
