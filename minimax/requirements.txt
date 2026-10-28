@@ -1,8 +1,11 @@
-# 上下文模块运行依赖（保持轻量：标准库 + 少量第三方）
-pymysql>=1.1.0        # seekdb（MySQL 协议）访问
-requests>=2.28.0      # MiniMax OpenAI 兼容 HTTP 调用
-pytest>=7.0.0         # verify 命令执行目标测试 / 回归测试
-
-# 可选依赖：PowerContext 官方包。
-# 若未安装，或未配置 POWERCONTEXT_SERVER，speckit/state.py 会自动降级为本地 JSON 状态文件。
-powercontext>=0.1.0
+# SDD context module dependencies (Linux x86_64, Python 3.11+; verified on 3.12).
+#
+# powercontext[seekdb] provides the Builtin runtime (SDK) used to persist task
+# state, plus the embedded seekdb binding (pylibseekdb) and PyMySQL.
+# The embedded seekdb server is what the context module indexes materials into.
+powercontext[seekdb]==1.2.0
+# aiomysql 0.3.2 (pulled by powercontext) needs the 1.x converter API; newer
+# PyMySQL releases make `escape_bytes_prefixed` a string and break every query.
+PyMySQL==1.2.0
+PyYAML>=6,<7
+pytest==9.0.2

@@ -1,0 +1,19 @@
+{
+  "record": "/mnt/d/pc2026/minimax/dev-records/20261028-163144-minimax-dev-run.json",
+  "model": "MiniMax-M3.1-Flash",
+  "api_style": "openai-compatible",
+  "base_url": "https://api.minimaxi.com",
+  "recorded_added_removed_lines": 46,
+  "recomputed_added_removed_lines": 46,
+  "checks": {
+    "record_result_applied_and_tested": true,
+    "tests_green": true,
+    "minimax_usage_present": true,
+    "recorded_context_has_two_specs": true,
+    "recorded_context_has_target_tests": true,
+    "recorded_context_has_regression_tests": true,
+    "recorded_context_has_hint_code": true,
+    "diff_matches_recomputed": true
+  },
+  "ok": true
+}

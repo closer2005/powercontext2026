@@ -1,0 +1,9 @@
+task_id: TASK-ORD-PRICING-V2
+title: 订单计价切换到 SPEC-ORD-001 v2 优惠与包邮规则
+description: 按 SPEC-ORD-001 v2（2026-11-01 生效）改造 ordercore 计价：取消满 3 件 95 折；gold 会员满 3 件额外减 500 分；满 5 件免运费，未满 5 件按区域收运费 east 800 分、west 1200 分；计算顺序为会员折扣→优惠券→gold 奖励→运费；保持金额整数分与总价非负。
+specs: [SPEC-ORD-001, SPEC-ORD-002]
+target_tests: [tests/test_pricing_target.py]
+regression_tests: [tests/test_pricing_regression.py]
+hints:
+  symbols: [final_price_cents, loyalty_bonus_cents, shipping_fee_cents, volume_discount_cents]
+  paths: [src/ordercore/pricing.py, src/ordercore/models.py]

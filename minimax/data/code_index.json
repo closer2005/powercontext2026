@@ -1,9 +1,0 @@
-[
-  {
-    "id": "CODE-ORD-1",
-    "file": "demo_project/orders/service.py",
-    "symbol": "list_orders",
-    "keywords": ["列表", "筛选", "status", "min_amount", "排序"],
-    "text": "def list_orders(orders, status=None, min_amount=None): 先复制输入列表；min_amount 过滤已实现（amount >= min_amount）；status 过滤尚未实现（TODO: status filter not implemented yet，传入后被忽略）；最后按 id 升序排序并返回。"
-  }
-]

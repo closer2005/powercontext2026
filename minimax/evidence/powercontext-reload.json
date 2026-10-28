@@ -1,0 +1,22 @@
+{
+  "task_id": "TASK-ORD-PRICING-V2",
+  "found": true,
+  "state": {
+    "done": [
+      "导入规格/代码/测试资料",
+      "生成开发上下文（空状态）"
+    ],
+    "status": "in_progress",
+    "task_id": "TASK-ORD-PRICING-V2",
+    "todo": [
+      "由 MiniMax 按上下文修改 pricing.py",
+      "运行目标与回归测试"
+    ],
+    "updated_at": "2026-10-28T08:46:32.976878+00:00",
+    "verifications": []
+  },
+  "meta": {
+    "scope_id": "scp_4fr5s4grh7bgm9bmptv6e460dk",
+    "entries": 1
+  }
+}

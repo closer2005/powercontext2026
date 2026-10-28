@@ -1,0 +1,118 @@
+{
+  "runnable": true,
+  "minimax_dev_record": {
+    "record": "/mnt/d/pc2026/minimax/dev-records/20261028-163144-minimax-dev-run.json",
+    "model": "MiniMax-M3.1-Flash",
+    "api_style": "openai-compatible",
+    "base_url": "https://api.minimaxi.com",
+    "recorded_added_removed_lines": 46,
+    "recomputed_added_removed_lines": 46,
+    "checks": {
+      "record_result_applied_and_tested": true,
+      "tests_green": true,
+      "minimax_usage_present": true,
+      "recorded_context_has_two_specs": true,
+      "recorded_context_has_target_tests": true,
+      "recorded_context_has_regression_tests": true,
+      "recorded_context_has_hint_code": true,
+      "diff_matches_recomputed": true
+    },
+    "ok": true
+  },
+  "context_before_change": {
+    "context_json": "/mnt/d/pc2026/minimax/evidence/context-empty-state.json",
+    "context_md": "/mnt/d/pc2026/minimax/evidence/context-empty-state.md",
+    "context_digest": "70b8356ea2d76a403a1f277efc9f399749fd27403665c41f6b5ec44abf175316",
+    "counts": {
+      "specs": 2,
+      "code": 13,
+      "target_tests": 15,
+      "regression_tests": 15
+    },
+    "state_loaded": false,
+    "validation": {
+      "problems": [],
+      "ok": true
+    },
+    "specs": [
+      "SPEC-ORD-001#r2",
+      "SPEC-ORD-002#r1"
+    ],
+    "code": [
+      "src/ordercore/pricing.py::volume_discount_cents",
+      "src/ordercore/pricing.py::loyalty_bonus_cents",
+      "src/ordercore/pricing.py::shipping_fee_cents",
+      "src/ordercore/pricing.py::final_price_cents",
+      "src/ordercore/pricing.py::_percent_floor",
+      "src/ordercore/pricing.py::_item_lines",
+      "src/ordercore/pricing.py::_item_count",
+      "src/ordercore/pricing.py::subtotal_cents",
+      "src/ordercore/pricing.py::member_discount_cents",
+      "src/ordercore/pricing.py::coupon_discount_cents",
+      "src/ordercore/models.py::Item",
+      "src/ordercore/models.py::Customer",
+      "src/ordercore/models.py::Coupon"
+    ],
+    "query_log": "/mnt/d/pc2026/minimax/evidence/db-queries.log"
+  },
+  "context_after_spec_update": {
+    "context_json": "/mnt/d/pc2026/minimax/evidence/context-after-spec-update.json",
+    "context_md": "/mnt/d/pc2026/minimax/evidence/context-after-spec-update.md",
+    "context_digest": "ea9b216d02f891087389f5eb341b625b0d0e8ef30710f959d351982dcd53bba2",
+    "counts": {
+      "specs": 2,
+      "code": 13,
+      "target_tests": 15,
+      "regression_tests": 15
+    },
+    "state_loaded": false,
+    "validation": {
+      "problems": [],
+      "ok": true
+    },
+    "specs": [
+      "SPEC-ORD-001#r2",
+      "SPEC-ORD-002#r1"
+    ],
+    "code": [
+      "src/ordercore/pricing.py::volume_discount_cents",
+      "src/ordercore/pricing.py::loyalty_bonus_cents",
+      "src/ordercore/pricing.py::shipping_fee_cents",
+      "src/ordercore/pricing.py::final_price_cents",
+      "src/ordercore/pricing.py::_percent_floor",
+      "src/ordercore/pricing.py::_item_lines",
+      "src/ordercore/pricing.py::_item_count",
+      "src/ordercore/pricing.py::subtotal_cents",
+      "src/ordercore/pricing.py::member_discount_cents",
+      "src/ordercore/pricing.py::coupon_discount_cents",
+      "src/ordercore/models.py::Item",
+      "src/ordercore/models.py::Customer",
+      "src/ordercore/models.py::Coupon"
+    ],
+    "query_log": "/mnt/d/pc2026/minimax/evidence/db-queries.log"
+  },
+  "powercontext_save": {
+    "scope_id": "scp_4fr5s4grh7bgm9bmptv6e460dk",
+    "revision": 1,
+    "memory_artifact_id": "memory",
+    "state_bytes": 302,
+    "state": {
+      "task_id": "TASK-ORD-PRICING-V2",
+      "status": "in_progress",
+      "done": [
+        "导入规格/代码/测试资料",
+        "生成开发上下文（空状态）"
+      ],
+      "todo": [
+        "由 MiniMax 按上下文修改 pricing.py",
+        "运行目标与回归测试"
+      ],
+      "verifications": [],
+      "updated_at": "2026-10-28T08:46:32.976878+00:00"
+    }
+  },
+  "powercontext_reload": {
+    "scope_id": "scp_4fr5s4grh7bgm9bmptv6e460dk",
+    "entries": 1
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "run_id": "20261028T084819-2c514998",
+  "project_root": "/mnt/d/pc2026/minimax/sample_app",
+  "counts": {
+    "spec": 3,
+    "code": 13,
+    "test": 30
+  },
+  "specs": [
+    "SPEC-ORD-001#r1:superseded",
+    "SPEC-ORD-001#r2:active",
+    "SPEC-ORD-002#r1:active"
+  ],
+  "code_scope": "src/",
+  "fulltext": true,
+  "db": "/root/mm_runtime_final/seekdb/sdd.db",
+  "query_log": "/mnt/d/pc2026/minimax/evidence/db-import.log",
+  "spec_versions": [
+    {
+      "spec_id": "SPEC-ORD-001",
+      "revision": 2,
+      "status": "active",
+      "path": "specs/SPEC-ORD-001.v2.md",
+      "digest": "7edfac87a8d68550"
+    },
+    {
+      "spec_id": "SPEC-ORD-001",
+      "revision": 1,
+      "status": "superseded",
+      "path": "specs/SPEC-ORD-001.v1.md",
+      "digest": "e2eeda3b0180da2f"
+    },
+    {
+      "spec_id": "SPEC-ORD-002",
+      "revision": 1,
+      "status": "active",
+      "path": "specs/SPEC-ORD-002.v1.md",
+      "digest": "20d448df83cc1b39"
+    }
+  ]
+}

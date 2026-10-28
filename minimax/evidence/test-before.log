@@ -1,0 +1,193 @@
+FFFFFFFFFFFFFFF                                                          [100%]
+=================================== FAILURES ===================================
+_____________ test_gold_member_with_three_items_gets_extra_500_off _____________
+
+    def test_gold_member_with_three_items_gets_extra_500_off():
+        """gold + 3 件：3000 - 150(会员) - 500(奖励) + 800(运费 east) = 3150。"""
+        items = make_items(3, unit_price_cents=1000)  # 小计 3000
+>       assert _total(items, tier="gold", region="east") == 3150
+E       AssertionError: assert 2708 == 3150
+E        +  where 2708 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='gold', region='east')
+
+tests/test_pricing_target.py:35: AssertionError
+_____________________ test_gold_bonus_requires_three_items _____________________
+
+    def test_gold_bonus_requires_three_items():
+        """只有 2 件时 gold 奖励不生效：2000 - 100(会员) + 800(运费) = 2700。"""
+        items = make_items(2, unit_price_cents=1000)
+>       assert _total(items, tier="gold", region="east") == 2700
+E       AssertionError: assert 1900 == 2700
+E        +  where 1900 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='gold', region='east')
+
+tests/test_pricing_target.py:41: AssertionError
+______________________ test_gold_bonus_requires_gold_tier ______________________
+
+    def test_gold_bonus_requires_gold_tier():
+        """silver 满 3 件没有 500 分奖励：3000 - 90(会员) + 800(运费) = 3710。"""
+        items = make_items(3, unit_price_cents=1000)
+>       assert _total(items, tier="silver", region="east") == 3710
+E       AssertionError: assert 2765 == 3710
+E        +  where 2765 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='silver', region='east')
+
+tests/test_pricing_target.py:47: AssertionError
+__________ test_basic_member_no_longer_gets_95_percent_at_three_items __________
+
+    def test_basic_member_no_longer_gets_95_percent_at_three_items():
+        """basic + 3 件：3000 不打 95 折，只加运费 800 = 3800。
+    
+        v1 基线此处为 2850（3000 - 150 体积折扣），改造后应为 3800。
+        """
+        items = make_items(3, unit_price_cents=1000)
+>       assert _total(items, tier="basic", region="east") == 3800
+E       AssertionError: assert 2850 == 3800
+E        +  where 2850 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='basic', region='east')
+
+tests/test_pricing_target.py:59: AssertionError
+______________ test_volume_discount_is_gone_for_large_basic_order ______________
+
+    def test_volume_discount_is_gone_for_large_basic_order():
+        """basic + 6 件（小计 6000）：不再有 5% 体积折扣，且免运费 = 6000。"""
+        items = make_items(6, unit_price_cents=1000)
+>       assert _total(items, tier="basic", region="east") == 6000
+E       AssertionError: assert 5700 == 6000
+E        +  where 5700 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widg...nts=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='basic', region='east')
+
+tests/test_pricing_target.py:65: AssertionError
+________________________ test_five_items_ship_free_east ________________________
+
+    def test_five_items_ship_free_east():
+        """满 5 件免运费：basic + 5 件，east，5000 原价不动。"""
+        items = make_items(5, unit_price_cents=1000)
+>       assert _total(items, tier="basic", region="east") == 5000
+E       AssertionError: assert 4750 == 5000
+E        +  where 4750 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widg...nts=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='basic', region='east')
+
+tests/test_pricing_target.py:74: AssertionError
+________________________ test_five_items_ship_free_west ________________________
+
+    def test_five_items_ship_free_west():
+        """满 5 件免运费（west 同样免）。"""
+        items = make_items(5, unit_price_cents=1000)
+>       assert _total(items, tier="basic", region="west") == 5000
+E       AssertionError: assert 4750 == 5000
+E        +  where 4750 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widg...nts=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='basic', region='west')
+
+tests/test_pricing_target.py:80: AssertionError
+________________________ test_four_items_east_pays_800 _________________________
+
+    def test_four_items_east_pays_800():
+        """4 件未满 5：east 收 800 分，4000 + 800 = 4800。"""
+        items = make_items(4, unit_price_cents=1000)
+>       assert _total(items, tier="basic", region="east") == 4800
+E       AssertionError: assert 3800 == 4800
+E        +  where 3800 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='basic', region='east')
+
+tests/test_pricing_target.py:86: AssertionError
+________________________ test_four_items_west_pays_1200 ________________________
+
+    def test_four_items_west_pays_1200():
+        """4 件未满 5：west 收 1200 分，4000 + 1200 = 5200。"""
+        items = make_items(4, unit_price_cents=1000)
+>       assert _total(items, tier="basic", region="west") == 5200
+E       AssertionError: assert 3800 == 5200
+E        +  where 3800 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='basic', region='west')
+
+tests/test_pricing_target.py:92: AssertionError
+____________ test_coupon_threshold_is_checked_after_member_discount ____________
+
+    def test_coupon_threshold_is_checked_after_member_discount():
+        """silver + 3 件（小计 3000）+ 券(200, 门槛 2950)。
+    
+        会员折扣后金额 = 2910 < 2950，券不生效：
+        3000 - 90 + 800 = 3710。若按小计 3000 判定门槛会错误地得到 3510。
+        """
+        items = make_items(3, unit_price_cents=1000)
+        coupon = make_coupon(amount_cents=200, min_spend_cents=2950)
+>       assert _total(items, tier="silver", region="east", coupon=coupon) == 3710
+E       AssertionError: assert 2765 == 3710
+E        +  where 2765 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='silver', region='east', coupon=Coupon(code='SAVE', amount_cents=200, min_spend_cents=2950))
+
+tests/test_pricing_target.py:106: AssertionError
+_______ test_coupon_applies_when_threshold_matches_post_discount_amount ________
+
+    def test_coupon_applies_when_threshold_matches_post_discount_amount():
+        """silver + 3 件 + 券(200, 门槛 2910)：门槛恰好等于会员折扣后金额，券生效。
+    
+        3000 - 90 - 200 + 800 = 3510。
+        """
+        items = make_items(3, unit_price_cents=1000)
+        coupon = make_coupon(amount_cents=200, min_spend_cents=2910)
+>       assert _total(items, tier="silver", region="east", coupon=coupon) == 3510
+E       AssertionError: assert 2765 == 3510
+E        +  where 2765 = _total([Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1), Item(name='widget', unit_price_cents=1000, qty=1)], tier='silver', region='east', coupon=Coupon(code='SAVE', amount_cents=200, min_spend_cents=2910))
+
+tests/test_pricing_target.py:116: AssertionError
+___________________ test_gold_three_items_with_coupon_combo ____________________
+
+    def test_gold_three_items_with_coupon_combo():
+        """gold + 3 件单价 2000 + 券(500, 门槛 5000)，east。
+    
+        6000 - 300(会员 5%) = 5700
+             - 500(券，5700 >= 5000) = 5200
+             - 500(gold 奖励)          = 4700
+             + 800(运费)               = 5500
+        """
+        items = make_items(3, unit_price_cents=2000)
+        coupon = make_coupon(amount_cents=500, min_spend_cents=5000)
+>       assert _total(items, tier="gold", region="east", coupon=coupon) == 5500
+E       AssertionError: assert 4915 == 5500
+E        +  where 4915 = _total([Item(name='widget', unit_price_cents=2000, qty=1), Item(name='widget', unit_price_cents=2000, qty=1), Item(name='widget', unit_price_cents=2000, qty=1)], tier='gold', region='east', coupon=Coupon(code='SAVE', amount_cents=500, min_spend_cents=5000))
+
+tests/test_pricing_target.py:132: AssertionError
+_________________ test_gold_three_items_with_coupon_combo_west _________________
+
+    def test_gold_three_items_with_coupon_combo_west():
+        """同上但 west：运费 1200，顺序不变 → 4700 + 1200 = 5900。"""
+        items = make_items(3, unit_price_cents=2000)
+        coupon = make_coupon(amount_cents=500, min_spend_cents=5000)
+>       assert _total(items, tier="gold", region="west", coupon=coupon) == 5900
+E       AssertionError: assert 4915 == 5900
+E        +  where 4915 = _total([Item(name='widget', unit_price_cents=2000, qty=1), Item(name='widget', unit_price_cents=2000, qty=1), Item(name='widget', unit_price_cents=2000, qty=1)], tier='gold', region='west', coupon=Coupon(code='SAVE', amount_cents=500, min_spend_cents=5000))
+
+tests/test_pricing_target.py:139: AssertionError
+_______________ test_gold_bonus_with_fractional_member_discount ________________
+
+    def test_gold_bonus_with_fractional_member_discount():
+        """999 分订单：会员折扣向下取整 49，再减 500，再加快递 800 = 1250。"""
+        items = [make_item(unit_price_cents=333, qty=3)]  # 小计 999
+>       assert _total(items, tier="gold", region="east") == 1250
+E       AssertionError: assert 903 == 1250
+E        +  where 903 = _total([Item(name='widget', unit_price_cents=333, qty=3)], tier='gold', region='east')
+
+tests/test_pricing_target.py:145: AssertionError
+________________ test_total_floor_still_applies_after_shipping _________________
+
+    def test_total_floor_still_applies_after_shipping():
+        """券把金额扣到 0 后再加运费，总价仍非负且等于运费。
+    
+        basic + 1 件 500 + 券(100000, 门槛 0)：max(0, 500-500) + 800 = 800。
+        """
+        items = [make_item(unit_price_cents=500, qty=1)]
+        coupon = make_coupon(amount_cents=100000, min_spend_cents=0)
+>       assert _total(items, tier="basic", region="east", coupon=coupon) == 800
+E       AssertionError: assert 0 == 800
+E        +  where 0 = _total([Item(name='widget', unit_price_cents=500, qty=1)], tier='basic', region='east', coupon=Coupon(code='SAVE', amount_cents=100000, min_spend_cents=0))
+
+tests/test_pricing_target.py:155: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_pricing_target.py::test_gold_member_with_three_items_gets_extra_500_off
+FAILED tests/test_pricing_target.py::test_gold_bonus_requires_three_items - A...
+FAILED tests/test_pricing_target.py::test_gold_bonus_requires_gold_tier - Ass...
+FAILED tests/test_pricing_target.py::test_basic_member_no_longer_gets_95_percent_at_three_items
+FAILED tests/test_pricing_target.py::test_volume_discount_is_gone_for_large_basic_order
+FAILED tests/test_pricing_target.py::test_five_items_ship_free_east - Asserti...
+FAILED tests/test_pricing_target.py::test_five_items_ship_free_west - Asserti...
+FAILED tests/test_pricing_target.py::test_four_items_east_pays_800 - Assertio...
+FAILED tests/test_pricing_target.py::test_four_items_west_pays_1200 - Asserti...
+FAILED tests/test_pricing_target.py::test_coupon_threshold_is_checked_after_member_discount
+FAILED tests/test_pricing_target.py::test_coupon_applies_when_threshold_matches_post_discount_amount
+FAILED tests/test_pricing_target.py::test_gold_three_items_with_coupon_combo
+FAILED tests/test_pricing_target.py::test_gold_three_items_with_coupon_combo_west
+FAILED tests/test_pricing_target.py::test_gold_bonus_with_fractional_member_discount
+FAILED tests/test_pricing_target.py::test_total_floor_still_applies_after_shipping
+15 failed in 1.64s

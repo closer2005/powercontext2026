@@ -1,0 +1,61 @@
+{
+  "description": "主验证样例：任务 TASK-ORD-PRICING-V2 的上下文必须包含的有效规格、代码与测试来源",
+  "spec_anchors": ["SPEC-ORD-001#r2", "SPEC-ORD-002#r1"],
+  "forbidden_spec_anchors": ["SPEC-ORD-001#r1"],
+  "spec_text_must_contain": {
+    "SPEC-ORD-001#r2": [
+      "取消满 3 件 95 折",
+      "gold 会员满 3 件额外减 500 分",
+      "满 5 件免运费",
+      "east 800 分、west 1200 分",
+      "会员折扣 → 优惠券 → gold 奖励 → 运费"
+    ],
+    "SPEC-ORD-002#r1": [
+      "总价下限 0",
+      "空订单为 0"
+    ]
+  },
+  "spec_text_must_not_contain": {
+    "SPEC-ORD-001#r2": ["DEMO-SPEC-UPDATE-MARKER"]
+  },
+  "code_anchors": [
+    "src/ordercore/pricing.py::final_price_cents",
+    "src/ordercore/pricing.py::loyalty_bonus_cents",
+    "src/ordercore/pricing.py::shipping_fee_cents",
+    "src/ordercore/pricing.py::volume_discount_cents"
+  ],
+  "target_tests": [
+    "test_gold_member_with_three_items_gets_extra_500_off",
+    "test_gold_bonus_requires_three_items",
+    "test_gold_bonus_requires_gold_tier",
+    "test_basic_member_no_longer_gets_95_percent_at_three_items",
+    "test_volume_discount_is_gone_for_large_basic_order",
+    "test_five_items_ship_free_east",
+    "test_five_items_ship_free_west",
+    "test_four_items_east_pays_800",
+    "test_four_items_west_pays_1200",
+    "test_coupon_threshold_is_checked_after_member_discount",
+    "test_coupon_applies_when_threshold_matches_post_discount_amount",
+    "test_gold_three_items_with_coupon_combo",
+    "test_gold_three_items_with_coupon_combo_west",
+    "test_gold_bonus_with_fractional_member_discount",
+    "test_total_floor_still_applies_after_shipping"
+  ],
+  "regression_tests": [
+    "test_subtotal_sums_line_totals",
+    "test_subtotal_of_empty_order_is_zero",
+    "test_subtotal_of_single_item",
+    "test_silver_member_gets_three_percent_discount",
+    "test_gold_member_gets_five_percent_discount",
+    "test_basic_member_has_no_discount",
+    "test_member_discount_floors_to_whole_cents",
+    "test_coupon_below_min_spend_yields_nothing",
+    "test_coupon_discount_capped_by_amount",
+    "test_coupon_at_exact_min_spend_applies",
+    "test_final_price_of_empty_order_is_zero",
+    "test_final_price_never_goes_negative",
+    "test_final_price_is_integer_cents",
+    "test_coupon_never_increases_total",
+    "test_final_price_does_not_mutate_inputs"
+  ]
+}

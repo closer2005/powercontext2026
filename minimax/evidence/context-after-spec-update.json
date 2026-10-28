@@ -1,0 +1,571 @@
+{
+  "task": {
+    "task_id": "TASK-ORD-PRICING-V2",
+    "title": "订单计价切换到 SPEC-ORD-001 v2 优惠与包邮规则",
+    "description": "按 SPEC-ORD-001 v2（2026-11-01 生效）改造 ordercore 计价：取消满 3 件 95 折；gold 会员满 3 件额外减 500 分；满 5 件免运费，未满 5 件按区域收运费 east 800 分、west 1200 分；计算顺序为会员折扣→优惠券→gold 奖励→运费；保持金额整数分与总价非负。",
+    "specs": [
+      "SPEC-ORD-001",
+      "SPEC-ORD-002"
+    ],
+    "target_tests": [
+      "tests/test_pricing_target.py"
+    ],
+    "regression_tests": [
+      "tests/test_pricing_regression.py"
+    ],
+    "hints": {
+      "symbols": [
+        "final_price_cents",
+        "loyalty_bonus_cents",
+        "shipping_fee_cents",
+        "volume_discount_cents"
+      ],
+      "paths": [
+        "src/ordercore/pricing.py",
+        "src/ordercore/models.py"
+      ]
+    }
+  },
+  "generated_at": "2026-10-28T08:48:25.881742+00:00",
+  "project_root": "/mnt/d/pc2026/minimax/sample_app",
+  "context_digest": "ea9b216d02f891087389f5eb341b625b0d0e8ef30710f959d351982dcd53bba2",
+  "specs": [
+    {
+      "spec_id": "SPEC-ORD-001",
+      "revision": 2,
+      "path": "specs/SPEC-ORD-001.v2.md",
+      "anchor": "SPEC-ORD-001#r2",
+      "title": "SPEC-ORD-001 · 订单计价规则（revision 2）",
+      "status": "active",
+      "digest": "7edfac87a8d68550",
+      "content": "---\nspec_id: SPEC-ORD-001\nrevision: 2\nstatus: active\neffective_from: 2026-11-01\ntags: [pricing, discount]\n---\n\n# SPEC-ORD-001 · 订单计价规则（revision 2）\n\n## 1. 生效说明\n\n本 revision 自 **2026-11-01** 起生效，取代 revision 1。\n生效后 `ordercore` 的计价必须按本文件执行；revision 1 的规则仅在历史订单回放时保留。\n\n## 2. 变更摘要（相对 revision 1）\n\n| 编号 | 变更 | 影响函数 |\n| --- | --- | --- |\n| C1 | **取消满 3 件 95 折**（体积折扣不再参与计价，恒为 0） | `volume_discount_cents` |\n| C2 | **gold 会员满 3 件额外减 500 分**（忠诚奖励） | `loyalty_bonus_cents` |\n| C3 | 新增运费：**满 5 件免运费**，未满 5 件按区域收 **east 800 分、west 1200 分** | `shipping_fee_cents` |\n| C4 | 计算顺序调整为：会员折扣 → 优惠券 → gold 奖励 → 运费 | `final_price_cents` |\n| C5 | 金额仍为整数分、总价下限 0、优惠券不超订单金额（沿用 revision 1 的不变量） | 全部 |\n\n一句话概括：**取消满 3 件 95 折**，改为按会员等级与件数发放奖励并引入按区域计费的运费。\n\n## 3. 规则明细\n\n### R1 小计\n\n`subtotal_cents(items) = Σ(unit_price_cents × qty)`；空明细为 `0`。金额一律整数分。\n\n### R2 会员折扣\n\n`member_discount_cents(amount, tier)`，按百分比向下取整：`basic` 0%、`silver` 3%、`gold` 5%。\n\n### R3 体积折扣 —— 已取消\n\n**取消满 3 件 95 折**：自 2026-11-01 起，件数不再触发任何百分比体积折扣，\n`volume_discount_cents(...)` 对所有件数恒返回 `0`（保留函数以兼容既有调用方）。\n\n### R4 优惠券\n\n未达 `coupon.min_spend_cents` 返回 `0`；否则返回 `min(coupon.amount_cents, 当前应付金额)`。\n门槛按 **会员折扣之后** 的当前应付金额判定（见 R6 的计算顺序）。\n\n### R5 gold 忠诚奖励\n\n`loyalty_bonus_cents(customer, item_count)`：**gold 会员满 3 件额外减 500 分**；\n即 `customer.tier == \"gold\"` 且 `item_count >= 3` 时返回 `500`，其余情况（含 silver/basic、件数不足 3）返回 `0`。\n该奖励为固定金额，不随订单金额变化，且不与会员折扣冲突（两者可叠加）。\n\n### R6 运费\n\n`shipping_fee_cents(...)`：\n\n- **满 5 件免运费**（件数 `>= 5` 时运费为 `0`）；\n- 未满 5 件按区域收费：**east 800 分、west 1200 分**；\n- 空订单（件数为 0）运费为 `0`，以保证 SPEC-ORD-002 的「空订单总价为 0」。\n\n> 实现提示：免运费判断依赖件数，而 revision 1 的签名只有 `(amount_cents, region)`；\n> 允许在改造中为该函数追加件数参数，并由 `final_price_cents` 传入。\n\n### R7 计算顺序与总价\n\n`final_price_cents(items, customer, coupon=None)` 必须严格按以下顺序：\n\n1. 小计；\n2. 减会员折扣（按小计金额）；\n3. 减优惠券（门槛按会员折扣后的金额判定，且不超过该金额）；\n4. 减 gold 奖励（500 分，满足 R5 条件时）；\n5. 加运费（按 R6 与件数、区域）；\n6. 取 `max(0, 金额)`，保证总价非负。\n\n顺序是有语义的：优惠券门槛必须在 **会员折扣之后** 判定，\n因此「先算券、后算会员折扣」或「按小计判定门槛」都视为不符合本规格。\n\n## 4. 计算示例\n\n以 `east` 区域、无优惠券为例：\n\n| 场景 | 计算 | 总价 |\n| --- | --- | --- |\n| gold，3 件 × 2000 | 6000 − 300(会员) − 0(券) − 500(奖励) + 800(运费) | **6000** |\n| basic，4 件 × 1000 | 4000 − 0 − 0 − 0 + 800 | **4800** |\n| basic，4 件 × 1000（west） | 4000 − 0 − 0 − 0 + 1200 | **5200** |\n| basic，5 件 × 1000 | 5000 − 0 − 0 − 0 + 0（包邮） | **5000** |\n| gold，3 件 × 2000，券(500, 门槛 5000) | 6000 − 300 − 500 − 500 + 800 | **5500** |\n\n## 5. 不变量（不变）\n\n- 金额为整数分，折扣向下取整；\n- 总价 `>= 0`；\n- 优惠券折扣不超过订单金额；\n- 空订单总价为 `0`（不因运费变成正数）。\n\n## 6. 验收与测试映射\n\n| 变更 | 测试 |\n| --- | --- |\n| C1 取消 95 折 | `tests/test_pricing_target.py::test_basic_member_no_longer_gets_95_percent_at_three_items`、`test_volume_discount_is_gone_for_large_basic_order` |\n| C2 gold 奖励 500 | `test_gold_member_with_three_items_gets_extra_500_off`、`test_gold_bonus_requires_three_items`、`test_gold_bonus_requires_gold_tier` |\n| C3 运费 / 包邮 | `test_five_items_ship_free_east`、`test_five_items_ship_free_west`、`test_four_items_east_pays_800`、`test_four_items_west_pays_1200` |\n| C4 计算顺序 | `test_coupon_threshold_is_checked_after_member_discount`、`test_coupon_applies_when_threshold_matches_post_discount_amount` |\n| 组合场景 | `test_gold_three_items_with_coupon_combo`、`test_gold_three_items_with_coupon_combo_west`、`test_gold_bonus_with_fractional_member_discount`、`test_total_floor_still_applies_after_shipping` |\n\n改造后 `tests/test_pricing_regression.py` 必须继续全绿。\n\n## 7. 变更记录\n\n- revision 1：会员折扣 + 满 3 件 95 折 + 优惠券 + 总价非负。\n- revision 2：取消满 3 件 95 折；gold 满 3 件额外减 500 分；满 5 件免运费、否则 east 800 / west 1200；\n  计算顺序改为会员折扣 → 优惠券 → gold 奖励 → 运费。\n## 8. 规格更新演示（仅用于验证上下文刷新）\n\n- 演示变更：gold 会员满 3 件额外减 600 分（DEMO-SPEC-UPDATE-MARKER）。\n",
+      "why": "task 声明规格 SPEC-ORD-001；关键词检索命中"
+    },
+    {
+      "spec_id": "SPEC-ORD-002",
+      "revision": 1,
+      "path": "specs/SPEC-ORD-002.v1.md",
+      "anchor": "SPEC-ORD-002#r1",
+      "title": "SPEC-ORD-002 · 计价不变量（revision 1）",
+      "status": "active",
+      "digest": "20d448df83cc1b39",
+      "content": "---\nspec_id: SPEC-ORD-002\nrevision: 1\nstatus: active\neffective_from: 2026-11-01\ntags: [pricing, discount]\n---\n\n# SPEC-ORD-002 · 计价不变量（revision 1）\n\n## 1. 目的\n\n本规格不定义任何折扣业务规则，只定义 `ordercore` 计价结果必须始终成立的 **不变量**。\n它独立于 SPEC-ORD-001 的版本变更：无论 revision 1 还是 revision 2，\n以下条款都必须成立，且是回归测试的判定依据。\n\n## 2. 不变量\n\n### I1 金额一律整数分\n\n- 所有金额参数与返回值都是 `int`，单位为「分」；\n- 计算过程只用整数运算，不得出现 `float`、`Decimal` 或字符串金额；\n- 百分比折扣向下取整（丢弃不足 1 分的部分）。\n\n### I2 总价下限 0\n\n`final_price_cents(...) >= 0` 对任意输入成立；\n即使折扣与优惠券之和超过订单金额，也必须夹到 `0`，绝不返回负数。\n\n### I3 优惠券不超过订单金额\n\n`coupon_discount_cents(amount, coupon) <= amount`；\n券面额大于当前应付金额时，最多把金额扣到 `0`。\n\n### I4 空订单为 0\n\n`items` 为空时：`subtotal_cents([]) == 0` 且 `final_price_cents([], customer) == 0`，\n不得因运费或其他附加费产生正数金额。\n\n## 3. 验收与测试映射\n\n| 不变量 | 测试 |\n| --- | --- |\n| I1 整数分 | `test_final_price_is_integer_cents`、`test_member_discount_floors_to_whole_cents` |\n| I2 总价非负 | `test_final_price_never_goes_negative` |\n| I3 券不超订单金额 | `test_coupon_discount_capped_by_amount` |\n| I4 空订单为 0 | `test_subtotal_of_empty_order_is_zero`、`test_final_price_of_empty_order_is_zero` |\n\n以上用例全部位于 `tests/test_pricing_regression.py`，在 SPEC-ORD-001 的 v1 → v2 改造前后都必须通过。\n\n## 4. 变更记录\n\n- revision 1：首次发布四条不变量。",
+      "why": "task 声明规格 SPEC-ORD-002；关键词检索命中"
+    }
+  ],
+  "code": [
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "volume_discount_cents",
+      "anchor": "src/ordercore/pricing.py::volume_discount_cents",
+      "line_start": 81,
+      "line_end": 83,
+      "digest": "812e23aee6d1c601",
+      "content": "def volume_discount_cents(amount_cents: int, item_count: int) -> int:\n    \"\"\"体积折扣（分）：SPEC-ORD-001 revision 2 已取消体积折扣，恒为 0。\"\"\"\n    return 0",
+      "why": "任务提示符号命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "loyalty_bonus_cents",
+      "anchor": "src/ordercore/pricing.py::loyalty_bonus_cents",
+      "line_start": 86,
+      "line_end": 90,
+      "digest": "2127e6f3b7e984b2",
+      "content": "def loyalty_bonus_cents(customer: Customer, item_count: int) -> int:\n    \"\"\"gold 会员满 3 件额外减免 500 分，其余情况为 0。\"\"\"\n    if customer.tier == \"gold\" and item_count >= 3:\n        return 500\n    return 0",
+      "why": "任务提示符号命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "shipping_fee_cents",
+      "anchor": "src/ordercore/pricing.py::shipping_fee_cents",
+      "line_start": 93,
+      "line_end": 104,
+      "digest": "3806cfc6d166277a",
+      "content": "def shipping_fee_cents(amount_cents: int, region: str, item_count: int = 0) -> int:\n    \"\"\"运费（分）：满 5 件免运费，未满 5 件按区域收费。\n\n    east 收 800 分，west 收 1200 分；空订单不收运费。\n    \"\"\"\n    if item_count == 0 or item_count >= 5:\n        return 0\n    if region == \"east\":\n        return 800\n    if region == \"west\":\n        return 1200\n    return 0",
+      "why": "任务提示符号命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "final_price_cents",
+      "anchor": "src/ordercore/pricing.py::final_price_cents",
+      "line_start": 107,
+      "line_end": 123,
+      "digest": "53a7aed5f818ff4c",
+      "content": "def final_price_cents(items: Iterable[Item], customer: Customer, coupon: Optional[Coupon] = None) -> int:\n    \"\"\"订单最终应付金额（分）。\n\n    按 SPEC-ORD-001 revision 2 顺序计价：\n    ``小计 → 减会员折扣 → 减优惠券 → 减 gold 奖励 → 加运费 → 下限 0``。\n\n    优惠券门槛按会员折扣后的当前应付金额判定。\n    \"\"\"\n    lines = _item_lines(items)\n    item_count = _item_count(lines)\n\n    amount = subtotal_cents(lines)\n    amount -= member_discount_cents(amount, customer.tier)\n    amount -= coupon_discount_cents(amount, coupon)\n    amount -= loyalty_bonus_cents(customer, item_count)\n    amount += shipping_fee_cents(amount, customer.region, item_count)\n    return max(0, amount)",
+      "why": "任务提示符号命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "_percent_floor",
+      "anchor": "src/ordercore/pricing.py::_percent_floor",
+      "line_start": 42,
+      "line_end": 44,
+      "digest": "d4c8b7b68c65661c",
+      "content": "def _percent_floor(amount_cents: int, percent: int) -> int:\n    \"\"\"按百分比向下取整返回整数分，全程整数运算。\"\"\"\n    return (amount_cents * percent) // 100",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "_item_lines",
+      "anchor": "src/ordercore/pricing.py::_item_lines",
+      "line_start": 47,
+      "line_end": 48,
+      "digest": "efde9fa8f344b779",
+      "content": "def _item_lines(items: Iterable[Item]) -> List[Item]:\n    return list(items)",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "_item_count",
+      "anchor": "src/ordercore/pricing.py::_item_count",
+      "line_start": 51,
+      "line_end": 53,
+      "digest": "94cadf2f9ac750f3",
+      "content": "def _item_count(items: Iterable[Item]) -> int:\n    \"\"\"件数定义：所有明细的 ``qty`` 之和（不是明细行数）。\"\"\"\n    return sum(item.qty for item in items)",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "subtotal_cents",
+      "anchor": "src/ordercore/pricing.py::subtotal_cents",
+      "line_start": 56,
+      "line_end": 58,
+      "digest": "efd9a5d4bc600fd8",
+      "content": "def subtotal_cents(items: Iterable[Item]) -> int:\n    \"\"\"订单小计（分）：各行 ``unit_price_cents * qty`` 之和。空明细返回 0。\"\"\"\n    return sum(item.unit_price_cents * item.qty for item in items)",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "member_discount_cents",
+      "anchor": "src/ordercore/pricing.py::member_discount_cents",
+      "line_start": 61,
+      "line_end": 65,
+      "digest": "4422d75921d191dc",
+      "content": "def member_discount_cents(amount_cents: int, tier: str) -> int:\n    \"\"\"会员折扣（分）：silver 3%、gold 5%、basic 0%，向下取整。\"\"\"\n    if tier not in _MEMBER_DISCOUNT_PERCENT:\n        raise ValueError(f\"未知会员等级: {tier!r}\")\n    return _percent_floor(amount_cents, _MEMBER_DISCOUNT_PERCENT[tier])",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/pricing.py",
+      "symbol": "coupon_discount_cents",
+      "anchor": "src/ordercore/pricing.py::coupon_discount_cents",
+      "line_start": 68,
+      "line_end": 78,
+      "digest": "7421ec3abf5821b3",
+      "content": "def coupon_discount_cents(amount_cents: int, coupon: Optional[Coupon]) -> int:\n    \"\"\"优惠券折扣（分）。\n\n    未达 ``coupon.min_spend_cents`` 返回 0；否则取 ``min(coupon.amount_cents, amount_cents)``，\n    保证券不会把金额扣成负数。\n    \"\"\"\n    if coupon is None:\n        return 0\n    if amount_cents < coupon.min_spend_cents:\n        return 0\n    return min(coupon.amount_cents, amount_cents)",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/models.py",
+      "symbol": "Item",
+      "anchor": "src/ordercore/models.py::Item",
+      "line_start": 17,
+      "line_end": 37,
+      "digest": "37afe7ad83bf810e",
+      "content": "class Item:\n    \"\"\"一条订单明细。\"\"\"\n\n    name: str\n    unit_price_cents: int\n    qty: int\n\n    def __post_init__(self) -> None:\n        if not isinstance(self.unit_price_cents, int) or isinstance(self.unit_price_cents, bool):\n            raise TypeError(\"unit_price_cents 必须是 int（整数分）\")\n        if not isinstance(self.qty, int) or isinstance(self.qty, bool):\n            raise TypeError(\"qty 必须是 int\")\n        if self.unit_price_cents < 0:\n            raise ValueError(\"unit_price_cents 不能为负\")\n        if self.qty < 0:\n            raise ValueError(\"qty 不能为负\")\n\n    @property\n    def line_total_cents(self) -> int:\n        \"\"\"本行金额（分）= 单价 × 数量。\"\"\"\n        return self.unit_price_cents * self.qty",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/models.py",
+      "symbol": "Customer",
+      "anchor": "src/ordercore/models.py::Customer",
+      "line_start": 41,
+      "line_end": 52,
+      "digest": "7e116c9716027172",
+      "content": "class Customer:\n    \"\"\"下单客户。\"\"\"\n\n    customer_id: str\n    tier: str\n    region: str\n\n    def __post_init__(self) -> None:\n        if self.tier not in CUSTOMER_TIERS:\n            raise ValueError(f\"未知会员等级: {self.tier!r}，允许值 {CUSTOMER_TIERS}\")\n        if self.region not in REGIONS:\n            raise ValueError(f\"未知区域: {self.region!r}，允许值 {REGIONS}\")",
+      "why": "任务提示文件命中",
+      "score": null
+    },
+    {
+      "path": "src/ordercore/models.py",
+      "symbol": "Coupon",
+      "anchor": "src/ordercore/models.py::Coupon",
+      "line_start": 56,
+      "line_end": 71,
+      "digest": "77a116a0fff43bea",
+      "content": "class Coupon:\n    \"\"\"优惠券。``min_spend_cents`` 为使用门槛（以打折后的应付金额判定）。\"\"\"\n\n    code: str\n    amount_cents: int\n    min_spend_cents: int\n\n    def __post_init__(self) -> None:\n        if not isinstance(self.amount_cents, int) or isinstance(self.amount_cents, bool):\n            raise TypeError(\"amount_cents 必须是 int（整数分）\")\n        if not isinstance(self.min_spend_cents, int) or isinstance(self.min_spend_cents, bool):\n            raise TypeError(\"min_spend_cents 必须是 int（整数分）\")\n        if self.amount_cents < 0:\n            raise ValueError(\"amount_cents 不能为负\")\n        if self.min_spend_cents < 0:\n            raise ValueError(\"min_spend_cents 不能为负\")",
+      "why": "任务提示文件命中",
+      "score": null
+    }
+  ],
+  "tests": {
+    "target": [
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_gold_member_with_three_items_gets_extra_500_off",
+        "anchor": "tests/test_pricing_target.py::test_gold_member_with_three_items_gets_extra_500_off",
+        "line_start": 32,
+        "line_end": 35,
+        "digest": "04db0808c507d808",
+        "content": "def test_gold_member_with_three_items_gets_extra_500_off():\n    \"\"\"gold + 3 件：3000 - 150(会员) - 500(奖励) + 800(运费 east) = 3150。\"\"\"\n    items = make_items(3, unit_price_cents=1000)  # 小计 3000\n    assert _total(items, tier=\"gold\", region=\"east\") == 3150"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_gold_bonus_requires_three_items",
+        "anchor": "tests/test_pricing_target.py::test_gold_bonus_requires_three_items",
+        "line_start": 38,
+        "line_end": 41,
+        "digest": "4209c9a23cca5b66",
+        "content": "def test_gold_bonus_requires_three_items():\n    \"\"\"只有 2 件时 gold 奖励不生效：2000 - 100(会员) + 800(运费) = 2700。\"\"\"\n    items = make_items(2, unit_price_cents=1000)\n    assert _total(items, tier=\"gold\", region=\"east\") == 2700"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_gold_bonus_requires_gold_tier",
+        "anchor": "tests/test_pricing_target.py::test_gold_bonus_requires_gold_tier",
+        "line_start": 44,
+        "line_end": 47,
+        "digest": "47f2118bc13c2976",
+        "content": "def test_gold_bonus_requires_gold_tier():\n    \"\"\"silver 满 3 件没有 500 分奖励：3000 - 90(会员) + 800(运费) = 3710。\"\"\"\n    items = make_items(3, unit_price_cents=1000)\n    assert _total(items, tier=\"silver\", region=\"east\") == 3710"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_basic_member_no_longer_gets_95_percent_at_three_items",
+        "anchor": "tests/test_pricing_target.py::test_basic_member_no_longer_gets_95_percent_at_three_items",
+        "line_start": 53,
+        "line_end": 59,
+        "digest": "3e35a11789503db9",
+        "content": "def test_basic_member_no_longer_gets_95_percent_at_three_items():\n    \"\"\"basic + 3 件：3000 不打 95 折，只加运费 800 = 3800。\n\n    v1 基线此处为 2850（3000 - 150 体积折扣），改造后应为 3800。\n    \"\"\"\n    items = make_items(3, unit_price_cents=1000)\n    assert _total(items, tier=\"basic\", region=\"east\") == 3800"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_volume_discount_is_gone_for_large_basic_order",
+        "anchor": "tests/test_pricing_target.py::test_volume_discount_is_gone_for_large_basic_order",
+        "line_start": 62,
+        "line_end": 65,
+        "digest": "74ac0b4a717067ed",
+        "content": "def test_volume_discount_is_gone_for_large_basic_order():\n    \"\"\"basic + 6 件（小计 6000）：不再有 5% 体积折扣，且免运费 = 6000。\"\"\"\n    items = make_items(6, unit_price_cents=1000)\n    assert _total(items, tier=\"basic\", region=\"east\") == 6000"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_five_items_ship_free_east",
+        "anchor": "tests/test_pricing_target.py::test_five_items_ship_free_east",
+        "line_start": 71,
+        "line_end": 74,
+        "digest": "26804d1a980078b9",
+        "content": "def test_five_items_ship_free_east():\n    \"\"\"满 5 件免运费：basic + 5 件，east，5000 原价不动。\"\"\"\n    items = make_items(5, unit_price_cents=1000)\n    assert _total(items, tier=\"basic\", region=\"east\") == 5000"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_five_items_ship_free_west",
+        "anchor": "tests/test_pricing_target.py::test_five_items_ship_free_west",
+        "line_start": 77,
+        "line_end": 80,
+        "digest": "1be54991eb4077d1",
+        "content": "def test_five_items_ship_free_west():\n    \"\"\"满 5 件免运费（west 同样免）。\"\"\"\n    items = make_items(5, unit_price_cents=1000)\n    assert _total(items, tier=\"basic\", region=\"west\") == 5000"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_four_items_east_pays_800",
+        "anchor": "tests/test_pricing_target.py::test_four_items_east_pays_800",
+        "line_start": 83,
+        "line_end": 86,
+        "digest": "981ed703b18e2955",
+        "content": "def test_four_items_east_pays_800():\n    \"\"\"4 件未满 5：east 收 800 分，4000 + 800 = 4800。\"\"\"\n    items = make_items(4, unit_price_cents=1000)\n    assert _total(items, tier=\"basic\", region=\"east\") == 4800"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_four_items_west_pays_1200",
+        "anchor": "tests/test_pricing_target.py::test_four_items_west_pays_1200",
+        "line_start": 89,
+        "line_end": 92,
+        "digest": "0a148b9227e88039",
+        "content": "def test_four_items_west_pays_1200():\n    \"\"\"4 件未满 5：west 收 1200 分，4000 + 1200 = 5200。\"\"\"\n    items = make_items(4, unit_price_cents=1000)\n    assert _total(items, tier=\"basic\", region=\"west\") == 5200"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_coupon_threshold_is_checked_after_member_discount",
+        "anchor": "tests/test_pricing_target.py::test_coupon_threshold_is_checked_after_member_discount",
+        "line_start": 98,
+        "line_end": 106,
+        "digest": "96287fd2790abd4d",
+        "content": "def test_coupon_threshold_is_checked_after_member_discount():\n    \"\"\"silver + 3 件（小计 3000）+ 券(200, 门槛 2950)。\n\n    会员折扣后金额 = 2910 < 2950，券不生效：\n    3000 - 90 + 800 = 3710。若按小计 3000 判定门槛会错误地得到 3510。\n    \"\"\"\n    items = make_items(3, unit_price_cents=1000)\n    coupon = make_coupon(amount_cents=200, min_spend_cents=2950)\n    assert _total(items, tier=\"silver\", region=\"east\", coupon=coupon) == 3710"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_coupon_applies_when_threshold_matches_post_discount_amount",
+        "anchor": "tests/test_pricing_target.py::test_coupon_applies_when_threshold_matches_post_discount_amount",
+        "line_start": 109,
+        "line_end": 116,
+        "digest": "ac792904b34f9682",
+        "content": "def test_coupon_applies_when_threshold_matches_post_discount_amount():\n    \"\"\"silver + 3 件 + 券(200, 门槛 2910)：门槛恰好等于会员折扣后金额，券生效。\n\n    3000 - 90 - 200 + 800 = 3510。\n    \"\"\"\n    items = make_items(3, unit_price_cents=1000)\n    coupon = make_coupon(amount_cents=200, min_spend_cents=2910)\n    assert _total(items, tier=\"silver\", region=\"east\", coupon=coupon) == 3510"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_gold_three_items_with_coupon_combo",
+        "anchor": "tests/test_pricing_target.py::test_gold_three_items_with_coupon_combo",
+        "line_start": 122,
+        "line_end": 132,
+        "digest": "cf672a3eeb8df2e7",
+        "content": "def test_gold_three_items_with_coupon_combo():\n    \"\"\"gold + 3 件单价 2000 + 券(500, 门槛 5000)，east。\n\n    6000 - 300(会员 5%) = 5700\n         - 500(券，5700 >= 5000) = 5200\n         - 500(gold 奖励)          = 4700\n         + 800(运费)               = 5500\n    \"\"\"\n    items = make_items(3, unit_price_cents=2000)\n    coupon = make_coupon(amount_cents=500, min_spend_cents=5000)\n    assert _total(items, tier=\"gold\", region=\"east\", coupon=coupon) == 5500"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_gold_three_items_with_coupon_combo_west",
+        "anchor": "tests/test_pricing_target.py::test_gold_three_items_with_coupon_combo_west",
+        "line_start": 135,
+        "line_end": 139,
+        "digest": "e19ca53e709c245e",
+        "content": "def test_gold_three_items_with_coupon_combo_west():\n    \"\"\"同上但 west：运费 1200，顺序不变 → 4700 + 1200 = 5900。\"\"\"\n    items = make_items(3, unit_price_cents=2000)\n    coupon = make_coupon(amount_cents=500, min_spend_cents=5000)\n    assert _total(items, tier=\"gold\", region=\"west\", coupon=coupon) == 5900"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_gold_bonus_with_fractional_member_discount",
+        "anchor": "tests/test_pricing_target.py::test_gold_bonus_with_fractional_member_discount",
+        "line_start": 142,
+        "line_end": 145,
+        "digest": "5f45525d1812444d",
+        "content": "def test_gold_bonus_with_fractional_member_discount():\n    \"\"\"999 分订单：会员折扣向下取整 49，再减 500，再加快递 800 = 1250。\"\"\"\n    items = [make_item(unit_price_cents=333, qty=3)]  # 小计 999\n    assert _total(items, tier=\"gold\", region=\"east\") == 1250"
+      },
+      {
+        "path": "tests/test_pricing_target.py",
+        "symbol": "test_total_floor_still_applies_after_shipping",
+        "anchor": "tests/test_pricing_target.py::test_total_floor_still_applies_after_shipping",
+        "line_start": 148,
+        "line_end": 155,
+        "digest": "decf5f80d19843d7",
+        "content": "def test_total_floor_still_applies_after_shipping():\n    \"\"\"券把金额扣到 0 后再加运费，总价仍非负且等于运费。\n\n    basic + 1 件 500 + 券(100000, 门槛 0)：max(0, 500-500) + 800 = 800。\n    \"\"\"\n    items = [make_item(unit_price_cents=500, qty=1)]\n    coupon = make_coupon(amount_cents=100000, min_spend_cents=0)\n    assert _total(items, tier=\"basic\", region=\"east\", coupon=coupon) == 800"
+      }
+    ],
+    "regression": [
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_subtotal_sums_line_totals",
+        "anchor": "tests/test_pricing_regression.py::test_subtotal_sums_line_totals",
+        "line_start": 29,
+        "line_end": 35,
+        "digest": "3835120fa9b74758",
+        "content": "def test_subtotal_sums_line_totals():\n    \"\"\"小计 = 各行 单价 × 数量 之和。\"\"\"\n    items = [\n        make_item(unit_price_cents=1999, qty=2),\n        make_item(unit_price_cents=500, qty=5),\n    ]\n    assert subtotal_cents(items) == 1999 * 2 + 500 * 5 == 6498"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_subtotal_of_empty_order_is_zero",
+        "anchor": "tests/test_pricing_regression.py::test_subtotal_of_empty_order_is_zero",
+        "line_start": 38,
+        "line_end": 40,
+        "digest": "e30b5faa90371434",
+        "content": "def test_subtotal_of_empty_order_is_zero():\n    \"\"\"空明细小计为 0。\"\"\"\n    assert subtotal_cents([]) == 0"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_subtotal_of_single_item",
+        "anchor": "tests/test_pricing_regression.py::test_subtotal_of_single_item",
+        "line_start": 43,
+        "line_end": 45,
+        "digest": "0dc888605be4a097",
+        "content": "def test_subtotal_of_single_item():\n    \"\"\"单行明细的小计。\"\"\"\n    assert subtotal_cents([make_item(unit_price_cents=1250, qty=3)]) == 3750"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_silver_member_gets_three_percent_discount",
+        "anchor": "tests/test_pricing_regression.py::test_silver_member_gets_three_percent_discount",
+        "line_start": 51,
+        "line_end": 52,
+        "digest": "7c7432044bd6ba28",
+        "content": "def test_silver_member_gets_three_percent_discount():\n    assert member_discount_cents(10000, \"silver\") == 300"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_gold_member_gets_five_percent_discount",
+        "anchor": "tests/test_pricing_regression.py::test_gold_member_gets_five_percent_discount",
+        "line_start": 55,
+        "line_end": 56,
+        "digest": "958d680a7fac90d6",
+        "content": "def test_gold_member_gets_five_percent_discount():\n    assert member_discount_cents(10000, \"gold\") == 500"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_basic_member_has_no_discount",
+        "anchor": "tests/test_pricing_regression.py::test_basic_member_has_no_discount",
+        "line_start": 59,
+        "line_end": 61,
+        "digest": "38eb53ac56398705",
+        "content": "def test_basic_member_has_no_discount():\n    assert member_discount_cents(10000, \"basic\") == 0\n    assert member_discount_cents(1, \"basic\") == 0"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_member_discount_floors_to_whole_cents",
+        "anchor": "tests/test_pricing_regression.py::test_member_discount_floors_to_whole_cents",
+        "line_start": 64,
+        "line_end": 71,
+        "digest": "2c2c3cd6f885a2e5",
+        "content": "def test_member_discount_floors_to_whole_cents():\n    \"\"\"折扣向下取整，且结果始终是 int（不引入浮点分）。\"\"\"\n    silver = member_discount_cents(999, \"silver\")  # 29.97 -> 29\n    gold = member_discount_cents(999, \"gold\")  # 49.95 -> 49\n    assert silver == 29\n    assert gold == 49\n    assert isinstance(silver, int) and not isinstance(silver, bool)\n    assert isinstance(gold, int) and not isinstance(gold, bool)"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_coupon_below_min_spend_yields_nothing",
+        "anchor": "tests/test_pricing_regression.py::test_coupon_below_min_spend_yields_nothing",
+        "line_start": 77,
+        "line_end": 80,
+        "digest": "fb5dbbea1cae6632",
+        "content": "def test_coupon_below_min_spend_yields_nothing():\n    \"\"\"未达门槛：券不打折。\"\"\"\n    coupon = make_coupon(amount_cents=500, min_spend_cents=5000)\n    assert coupon_discount_cents(4999, coupon) == 0"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_coupon_discount_capped_by_amount",
+        "anchor": "tests/test_pricing_regression.py::test_coupon_discount_capped_by_amount",
+        "line_start": 83,
+        "line_end": 86,
+        "digest": "0f64fe61f2ce17d6",
+        "content": "def test_coupon_discount_capped_by_amount():\n    \"\"\"券面额大于应付金额时，只扣到 0，不产生负金额。\"\"\"\n    coupon = make_coupon(amount_cents=1000, min_spend_cents=0)\n    assert coupon_discount_cents(300, coupon) == 300"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_coupon_at_exact_min_spend_applies",
+        "anchor": "tests/test_pricing_regression.py::test_coupon_at_exact_min_spend_applies",
+        "line_start": 89,
+        "line_end": 92,
+        "digest": "47ebae9a81ee7e1a",
+        "content": "def test_coupon_at_exact_min_spend_applies():\n    \"\"\"金额恰好等于门槛时券生效。\"\"\"\n    coupon = make_coupon(amount_cents=500, min_spend_cents=5000)\n    assert coupon_discount_cents(5000, coupon) == 500"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_final_price_of_empty_order_is_zero",
+        "anchor": "tests/test_pricing_regression.py::test_final_price_of_empty_order_is_zero",
+        "line_start": 98,
+        "line_end": 102,
+        "digest": "9a9903b10e1872df",
+        "content": "def test_final_price_of_empty_order_is_zero():\n    \"\"\"空订单最终价为 0（SPEC-ORD-002 不变量）。\"\"\"\n    customer = make_customer(tier=\"gold\", region=\"west\")\n    assert final_price_cents([], customer) == 0\n    assert final_price_cents([], customer, make_coupon(100, 0)) == 0"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_final_price_never_goes_negative",
+        "anchor": "tests/test_pricing_regression.py::test_final_price_never_goes_negative",
+        "line_start": 105,
+        "line_end": 110,
+        "digest": "079041512613e10a",
+        "content": "def test_final_price_never_goes_negative():\n    \"\"\"券面额远大于订单金额时，总价被夹到 0 而非负数。\"\"\"\n    customer = make_customer(tier=\"basic\", region=\"east\")\n    items = [make_item(unit_price_cents=500, qty=1)]\n    coupon = make_coupon(amount_cents=100000, min_spend_cents=0)\n    assert final_price_cents(items, customer, coupon) >= 0"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_final_price_is_integer_cents",
+        "anchor": "tests/test_pricing_regression.py::test_final_price_is_integer_cents",
+        "line_start": 113,
+        "line_end": 118,
+        "digest": "10a9a68056207ef7",
+        "content": "def test_final_price_is_integer_cents():\n    \"\"\"最终价必须是 int（整数分），不是 float / Decimal。\"\"\"\n    customer = make_customer(tier=\"silver\", region=\"east\")\n    items = [make_item(unit_price_cents=1234, qty=1)]\n    total = final_price_cents(items, customer, make_coupon(amount_cents=99, min_spend_cents=0))\n    assert isinstance(total, int) and not isinstance(total, bool)"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_coupon_never_increases_total",
+        "anchor": "tests/test_pricing_regression.py::test_coupon_never_increases_total",
+        "line_start": 121,
+        "line_end": 126,
+        "digest": "9aeebb41fe40d779",
+        "content": "def test_coupon_never_increases_total():\n    \"\"\"同一订单加上一张达标券后，总价不会变高。\"\"\"\n    customer = make_customer(tier=\"basic\", region=\"east\")\n    items = [make_item(unit_price_cents=10000, qty=1)]\n    coupon = make_coupon(amount_cents=1500, min_spend_cents=5000)\n    assert final_price_cents(items, customer, coupon) < final_price_cents(items, customer)"
+      },
+      {
+        "path": "tests/test_pricing_regression.py",
+        "symbol": "test_final_price_does_not_mutate_inputs",
+        "anchor": "tests/test_pricing_regression.py::test_final_price_does_not_mutate_inputs",
+        "line_start": 129,
+        "line_end": 135,
+        "digest": "dbed1e313059c09d",
+        "content": "def test_final_price_does_not_mutate_inputs():\n    \"\"\"计价是纯函数，不修改入参。\"\"\"\n    items = [make_item(unit_price_cents=800, qty=2)]\n    customer = Customer(customer_id=\"C-9\", tier=\"gold\", region=\"west\")\n    final_price_cents(items, customer, make_coupon(50, 0))\n    assert items == [Item(name=\"widget\", unit_price_cents=800, qty=2)]\n    assert customer == Customer(customer_id=\"C-9\", tier=\"gold\", region=\"west\")"
+      }
+    ]
+  },
+  "state": {},
+  "queries": [
+    {
+      "sql": "CREATE TABLE IF NOT EXISTS sdd_materials ( mat_id VARCHAR(191) NOT NULL, kind VARCHAR(16) NOT NULL, path VARCHAR(255) NOT NULL, anchor VARCHAR(255) NOT NULL, symbol VARCHAR(191) NULL, spec_id VARCHAR(64) NULL, revision INT NULL, status VARCHAR(16) NOT NULL, title VARCHAR(255) NOT NULL, content MEDIUMTEXT NOT NULL, tokenized MEDIUMTEXT NOT NULL, tags VARCHAR(512) NULL, line_start INT NULL, line_end INT NULL, digest VARCHAR(64) NOT NULL, updated_at VARCHAR(32) NOT NULL, PRIMARY KEY (mat_id), KEY idx_kind_status (kind, status), KEY idx_spec (spec_id, revision) ) DEFAULT CHARSET = utf8mb4",
+      "rows": 0,
+      "note": ""
+    },
+    {
+      "sql": "CREATE TABLE IF NOT EXISTS sdd_import_runs ( run_id VARCHAR(64) NOT NULL, imported_at VARCHAR(32) NOT NULL, spec_count INT NOT NULL, code_count INT NOT NULL, test_count INT NOT NULL, note VARCHAR(512) NULL, PRIMARY KEY (run_id) ) DEFAULT CHARSET = utf8mb4",
+      "rows": 0,
+      "note": ""
+    },
+    {
+      "sql": "SHOW INDEX FROM sdd_materials",
+      "rows": 6,
+      "note": "inspect indexes"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND status = %s AND spec_id = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 0,
+      "note": "spec fulltext search"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND status = %s AND spec_id = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 1,
+      "note": "spec fulltext search (relaxed)"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND status = %s AND spec_id = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 0,
+      "note": "spec fulltext search"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND status = %s AND spec_id = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 1,
+      "note": "spec fulltext search (relaxed)"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND status = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 0,
+      "note": "spec fulltext search"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND status = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 2,
+      "note": "spec fulltext search (relaxed)"
+    },
+    {
+      "sql": "SELECT * FROM sdd_materials WHERE kind = %s AND symbol IN (%s,%s,%s,%s) ORDER BY path, line_start",
+      "rows": 4,
+      "note": "get code"
+    },
+    {
+      "sql": "SELECT * FROM sdd_materials WHERE kind = %s AND path = %s ORDER BY path, line_start",
+      "rows": 10,
+      "note": "get code"
+    },
+    {
+      "sql": "SELECT * FROM sdd_materials WHERE kind = %s AND path = %s ORDER BY path, line_start",
+      "rows": 3,
+      "note": "get code"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 0,
+      "note": "code fulltext search"
+    },
+    {
+      "sql": "SELECT mat_id, kind, path, anchor, symbol, spec_id, revision, status, title, content, line_start, line_end, digest, MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) AS score FROM sdd_materials WHERE kind = %s AND MATCH(tokenized) AGAINST (%s IN BOOLEAN MODE) ORDER BY score DESC, mat_id LIMIT %s",
+      "rows": 13,
+      "note": "code fulltext search (relaxed)"
+    },
+    {
+      "sql": "SELECT * FROM sdd_materials WHERE kind = %s AND path = %s ORDER BY path, line_start",
+      "rows": 15,
+      "note": "get test"
+    },
+    {
+      "sql": "SELECT * FROM sdd_materials WHERE kind = %s AND path = %s ORDER BY path, line_start",
+      "rows": 15,
+      "note": "get test"
+    }
+  ],
+  "counts": {
+    "specs": 2,
+    "code": 13,
+    "target_tests": 15,
+    "regression_tests": 15
+  },
+  "state_meta": {},
+  "validation": {
+    "problems": [],
+    "ok": true
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "context_json": "/mnt/d/pc2026/minimax/evidence/context-after-spec-update.json",
+  "context_md": "/mnt/d/pc2026/minimax/evidence/context-after-spec-update.md",
+  "context_digest": "ea9b216d02f891087389f5eb341b625b0d0e8ef30710f959d351982dcd53bba2",
+  "counts": {
+    "specs": 2,
+    "code": 13,
+    "target_tests": 15,
+    "regression_tests": 15
+  },
+  "state_loaded": false,
+  "validation": {
+    "problems": [],
+    "ok": true
+  },
+  "specs": [
+    "SPEC-ORD-001#r2",
+    "SPEC-ORD-002#r1"
+  ],
+  "code": [
+    "src/ordercore/pricing.py::volume_discount_cents",
+    "src/ordercore/pricing.py::loyalty_bonus_cents",
+    "src/ordercore/pricing.py::shipping_fee_cents",
+    "src/ordercore/pricing.py::final_price_cents",
+    "src/ordercore/pricing.py::_percent_floor",
+    "src/ordercore/pricing.py::_item_lines",
+    "src/ordercore/pricing.py::_item_count",
+    "src/ordercore/pricing.py::subtotal_cents",
+    "src/ordercore/pricing.py::member_discount_cents",
+    "src/ordercore/pricing.py::coupon_discount_cents",
+    "src/ordercore/models.py::Item",
+    "src/ordercore/models.py::Customer",
+    "src/ordercore/models.py::Coupon"
+  ],
+  "query_log": "/mnt/d/pc2026/minimax/evidence/db-queries.log"
+}

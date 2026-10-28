@@ -1,0 +1,10 @@
+{
+  "description": "规格更新演示：向 SPEC-ORD-001 v2 追加演示条款并重新导入后，上下文必须包含新内容",
+  "spec_anchors": ["SPEC-ORD-001#r2", "SPEC-ORD-002#r1"],
+  "spec_text_must_contain": {
+    "SPEC-ORD-001#r2": [
+      "DEMO-SPEC-UPDATE-MARKER",
+      "额外减 600 分"
+    ]
+  }
+}

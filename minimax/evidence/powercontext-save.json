@@ -1,0 +1,20 @@
+{
+  "scope_id": "scp_4fr5s4grh7bgm9bmptv6e460dk",
+  "revision": 1,
+  "memory_artifact_id": "memory",
+  "state_bytes": 302,
+  "state": {
+    "task_id": "TASK-ORD-PRICING-V2",
+    "status": "in_progress",
+    "done": [
+      "导入规格/代码/测试资料",
+      "生成开发上下文（空状态）"
+    ],
+    "todo": [
+      "由 MiniMax 按上下文修改 pricing.py",
+      "运行目标与回归测试"
+    ],
+    "verifications": [],
+    "updated_at": "2026-10-28T08:46:32.976878+00:00"
+  }
+}
